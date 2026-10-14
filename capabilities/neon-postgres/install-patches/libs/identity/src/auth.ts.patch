@@ -1,0 +1,31 @@
+diff --git a/libs/identity/src/auth.ts b/libs/identity/src/auth.ts
+index fe5a6bb..623c5e3 100644
+--- a/libs/identity/src/auth.ts
++++ b/libs/identity/src/auth.ts
+@@ -1,7 +1,12 @@
+ import { env } from "cloudflare:workers";
+ import { betterAuth, type BetterAuthOptions } from "better-auth";
+ import { drizzleAdapter } from "better-auth/adapters/drizzle";
+-import { getDb, authSchema, newEntityId, type Entity } from "@lib/db-models";
++import {
++  stableDbRef,
++  authSchema,
++  newEntityId,
++  type Entity,
++} from "@lib/db-models";
+ 
+ type AuthEnv = {
+   BETTER_AUTH_SECRET: string;
+@@ -53,8 +58,10 @@ function buildOptions(): BetterAuthOptions {
+       ),
+       fallback: FRONTEND_CANONICAL_BASE_URL,
+     },
+-    database: drizzleAdapter(getDb(), {
+-      provider: "sqlite",
++    // The auth instance is cached per isolate and keeps the db it is given, so
++    // it gets the proxy that resolves the current request's client.
++    database: drizzleAdapter(stableDbRef, {
++      provider: "pg",
+       schema: authSchema,
+     }),
+     session: { modelName: "user_sessions" },

@@ -1,0 +1,7 @@
+{
+  "name": "email-sending",
+  "version": "0.2.0",
+  "deliveredAs": "add-on",
+  "description": "Transactional email from the Worker via the Cloudflare send_email binding: a react-email design system (@lib/email-ds), a product-agnostic sender (@lib/email-service), and the better-auth flows built on them — self-service sign-up with email verification and forgot/reset password, with frontend screens, e2e coverage against the simulated local inbox, and a react-email preview server. Installed on demand by add-edge-capability; not part of a fresh project until added.",
+  "manifestKey": "email-sending"
+}

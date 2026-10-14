@@ -1,0 +1,23 @@
+diff --git a/apps/frontend/src/App.tsx b/apps/frontend/src/App.tsx
+index eda5f89..9aee016 100644
+--- a/apps/frontend/src/App.tsx
++++ b/apps/frontend/src/App.tsx
+@@ -1,5 +1,8 @@
+ import { Routes, Route, Navigate } from "react-router-dom";
+ import { LoginScreen } from "./screens/login/LoginScreen";
++import { SignUpScreen } from "./screens/signup/SignUpScreen";
++import { ForgotPasswordScreen } from "./screens/forgot-password/ForgotPasswordScreen";
++import { ResetPasswordScreen } from "./screens/reset-password/ResetPasswordScreen";
+ import { HomeScreen } from "./screens/home/HomeScreen";
+ import { UnauthenticatedLayout } from "./components/layouts/UnauthenticatedLayout";
+ import { LoadingLayout } from "./components/layouts/LoadingLayout";
+@@ -15,6 +18,9 @@ export const App = () => {
+     return (
+       <Routes>
+         <Route element={<UnauthenticatedLayout />}>
++          <Route path="/signup" element={<SignUpScreen />} />
++          <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
++          <Route path="/reset-password" element={<ResetPasswordScreen />} />
+           <Route path="*" element={<LoginScreen />} />
+         </Route>
+       </Routes>

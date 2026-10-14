@@ -1,0 +1,122 @@
+diff --git a/.github/workflows/preview-deploy.yml b/.github/workflows/preview-deploy.yml
+index 7613357..9d4cece 100644
+--- a/.github/workflows/preview-deploy.yml
++++ b/.github/workflows/preview-deploy.yml
+@@ -39,7 +39,7 @@ jobs:
+           account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+           resolve-subdomain: "true"
+ 
+-      - name: Compute preview D1 name and alias
++      - name: Compute preview Neon branch and alias
+         id: names
+         run: |
+           set -euo pipefail
+@@ -50,12 +50,12 @@ jobs:
+             | cut -c1-40 \
+             | sed 's/-$//')
+           HASH=$(printf '%s' "$BRANCH" | sha1sum | cut -c1-6)
+-          DB_NAME="project-name-preview-${SANITIZED}-${HASH}"
++          NEON_BRANCH="preview/${SANITIZED}-${HASH}"
+           # Alias rules: lowercase letters/numbers/dashes, must start with letter,
+           # alias+worker name must fit in 63 chars (worker is "project-name-staging", 16 with dash).
+           ALIAS=$(printf 'br-%s-%s' "$SANITIZED" "$HASH" | cut -c1-47 | sed 's/-$//')
+           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+-          echo "db_name=$DB_NAME" >> "$GITHUB_OUTPUT"
++          echo "neon_branch=$NEON_BRANCH" >> "$GITHUB_OUTPUT"
+           echo "alias=$ALIAS" >> "$GITHUB_OUTPUT"
+ 
+       - uses: pnpm/action-setup@v5
+@@ -71,59 +71,32 @@ jobs:
+       - name: Build
+         run: pnpm build
+ 
+-      - name: Find or create preview D1
+-        id: d1
+-        run: |
+-          set -euo pipefail
+-          DB_NAME="${{ steps.names.outputs.db_name }}"
+-          EXISTING=$(pnpm --silent --filter @app/backend exec wrangler d1 list --json \
+-            | jq -r ".[] | select(.name == \"$DB_NAME\") | .uuid")
+-          if [ -n "$EXISTING" ]; then
+-            echo "Found existing preview D1: $DB_NAME ($EXISTING)"
+-            echo "id=$EXISTING" >> "$GITHUB_OUTPUT"
+-            echo "created=false" >> "$GITHUB_OUTPUT"
+-          else
+-            echo "Creating preview D1: $DB_NAME"
+-            pnpm --silent --filter @app/backend exec wrangler d1 create "$DB_NAME"
+-            ID=$(pnpm --silent --filter @app/backend exec wrangler d1 info "$DB_NAME" --json \
+-              | jq -r '.uuid')
+-            if [ -z "$ID" ] || [ "$ID" = "null" ]; then
+-              echo "::error::Could not resolve UUID for newly created $DB_NAME"
+-              exit 1
+-            fi
+-            echo "id=$ID" >> "$GITHUB_OUTPUT"
+-            echo "created=true" >> "$GITHUB_OUTPUT"
+-          fi
++      # A copy-on-write branch of staging: each preview gets its own isolated
++      # copy of staging's data instantly, reused on later pushes.
++      - name: Find or create the preview Neon branch
++        id: neon
++        uses: ./.github/actions/neon-env
++        with:
++          api-key: ${{ secrets.NEON_API_KEY }}
++          project-id: ${{ secrets.NEON_PROJECT_ID }}
++          branch: ${{ steps.names.outputs.neon_branch }}
++          create: "true"
++          parent-branch: staging
+ 
+-      # Previews are seeded from the staging D1 (kept current by
+-      # staging-deploy.yml on every push to main).
+-      - name: Clone staging D1 into new preview
+-        if: steps.d1.outputs.created == 'true'
+-        run: |
+-          set -euo pipefail
+-          SOURCE_NAME=project-name-staging
+-          echo "Exporting from source D1 $SOURCE_NAME"
+-          pnpm --silent --filter @app/backend exec wrangler d1 export "$SOURCE_NAME" \
+-            --remote --output /tmp/source-dump.sql
+-          echo "Importing into ${{ steps.names.outputs.db_name }}"
+-          pnpm --silent --filter @app/backend exec wrangler d1 execute "${{ steps.names.outputs.db_name }}" \
+-            --remote --file /tmp/source-dump.sql
++      - name: Apply migrations to the preview branch
++        env:
++          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
++        run: pnpm db:migrate
+ 
+       - name: Generate preview wrangler config
+         env:
+           TARGET: preview
+-          DB_NAME: ${{ steps.names.outputs.db_name }}
+-          DB_ID: ${{ steps.d1.outputs.id }}
++          DB_CONNECTION_STRING: ${{ steps.neon.outputs.db_url }}
+           DEPLOY_ORIGIN: https://${{ steps.names.outputs.alias }}-project-name-staging.${{ steps.cf.outputs.subdomain }}.workers.dev
+         run: |
+           echo "Preview canonical URL: $DEPLOY_ORIGIN"
+           node scripts/gen-wrangler-config.mjs
+ 
+-      - name: Apply migrations to preview D1
+-        run: |
+-          cd apps/backend
+-          pnpm exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.json --remote
+-
+       - name: Upload preview version
+         id: upload
+         run: |
+@@ -134,7 +107,7 @@ jobs:
+           pnpm exec wrangler versions upload \
+             --config dist/worker/wrangler.generated.json \
+             --message "$MESSAGE" \
+-            --tag "preview-${{ steps.names.outputs.db_name }}" \
++            --tag "preview-${{ steps.names.outputs.alias }}" \
+             --preview-alias "$ALIAS" \
+             2>&1 | tee /tmp/upload.log
+           # Prefer the stable alias URL; fall back to any workers.dev URL.
+@@ -173,7 +146,7 @@ jobs:
+           BODY="Preview version uploaded for branch \`${{ steps.names.outputs.branch }}\` @ \`${GITHUB_SHA::7}\`.
+           - Preview URL (stable per branch): ${URL:-_(not parsed — check workflow log)_}
+           - Alias: \`${{ steps.names.outputs.alias }}\`
+-          - D1: \`${{ steps.names.outputs.db_name }}\` (id: \`${{ steps.d1.outputs.id }}\`)
++          - Neon branch: \`${{ steps.names.outputs.neon_branch }}\` (from staging)
+           - Not routed to production traffic."
+           printf '%s\n\n' "$BODY" > /tmp/preview-comment.md
+           cat /tmp/worker-size.md >> /tmp/preview-comment.md

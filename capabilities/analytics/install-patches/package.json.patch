@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index f46d20d..7210965 100644
+--- a/package.json
++++ b/package.json
+@@ -26,7 +26,7 @@
+     "db:migrate": "pnpm --filter @app/backend exec wrangler d1 migrations apply DB",
+     "gen:prod-config": "TARGET=production DB_NAME=project-name-prod DB_ID=$(pnpm --silent --filter @app/backend exec wrangler d1 info project-name-prod --json | jq -r .uuid) node scripts/gen-wrangler-config.mjs",
+     "db:migrate:remote": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.production.json --remote",
+-    "deploy": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json",
++    "deploy": "ENVIRONMENT=production pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json",
+     "type-check": "turbo run type-check",
+     "clean": "turbo run clean && rm -rf node_modules",
+     "lint": "eslint .",

@@ -1,0 +1,13 @@
+diff --git a/.github/workflows/prod-deploy.yml b/.github/workflows/prod-deploy.yml
+index 4ac7951..5553572 100644
+--- a/.github/workflows/prod-deploy.yml
++++ b/.github/workflows/prod-deploy.yml
+@@ -45,6 +45,8 @@ jobs:
+         run: pnpm install --frozen-lockfile
+ 
+       - name: Build
++        env:
++          ENVIRONMENT: production
+         run: pnpm build
+ 
+       # Production resolves its D1 by name, exactly like staging — but it must

@@ -1,0 +1,13 @@
+diff --git a/libs/db-models/tsconfig.json b/libs/db-models/tsconfig.json
+index dbe6b7d..62a7404 100644
+--- a/libs/db-models/tsconfig.json
++++ b/libs/db-models/tsconfig.json
+@@ -6,7 +6,7 @@
+     "composite": true,
+     "declaration": true,
+     "declarationMap": true,
+-    "types": ["@cloudflare/workers-types"],
++    "types": ["@cloudflare/workers-types", "node"],
+     "lib": ["ES2022"]
+   },
+   "references": [{ "path": "../logging" }],

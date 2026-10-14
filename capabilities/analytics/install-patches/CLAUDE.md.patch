@@ -1,0 +1,15 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 95d4168..84ec3cd 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -45,6 +45,10 @@ It is a rulebook, not a changelog.
+ - Every table has an `id` column, except join tables with a composite key. Its value is
+   `newEntityId("<ENTITY>")` from `@lib/db-models`; a new table adds its uppercase prefix to
+   `ENTITY_PREFIXES` there first.
++- **Analytics has one emitter per fact** ([docs/analytics.md](docs/analytics.md)): the
++  Worker reports state changes with `analytics` from `@lib/analytics-server`, where the
++  change is made; the browser reports only intent. Never track from a frontend mutation
++  hook, and never put an email, id or token in an event property.
+ - Server code logs a **constant message** with everything variable as a property
+   (`log.info("user created", { userId })`); never put emails, passwords or tokens in a
+   property.

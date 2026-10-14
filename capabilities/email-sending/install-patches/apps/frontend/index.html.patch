@@ -1,0 +1,13 @@
+diff --git a/apps/frontend/index.html b/apps/frontend/index.html
+index 355b036..990ccff 100644
+--- a/apps/frontend/index.html
++++ b/apps/frontend/index.html
+@@ -3,7 +3,7 @@
+   <head>
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>project-name</title>
++    <title>%PRODUCT_NAME%</title>
+   </head>
+   <body>
+     <div id="root"></div>

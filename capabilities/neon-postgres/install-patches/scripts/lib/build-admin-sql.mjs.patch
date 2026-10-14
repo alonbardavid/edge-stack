@@ -1,0 +1,29 @@
+diff --git a/scripts/lib/build-admin-sql.mjs b/scripts/lib/build-admin-sql.mjs
+index 41f8aa4..6f57848 100644
+--- a/scripts/lib/build-admin-sql.mjs
++++ b/scripts/lib/build-admin-sql.mjs
+@@ -1,19 +1,13 @@
+ import { newEntityId } from "@lib/db-models/entity-ids";
+ import { hashPassword } from "better-auth/crypto";
+ 
+-function sqlString(value) {
+-  return `'${String(value).replace(/'/g, "''")}'`;
+-}
+-
+-export async function buildCreateAdminSql({ username, password }) {
++export async function buildCreateAdminStatement({ username, password }) {
+   if (!username || !password) {
+     throw new Error("username and password are both required");
+   }
+-  const adminId = newEntityId("ADMIN");
+   const hash = await hashPassword(password);
+-
+-  return (
+-    `INSERT INTO app_admin (id, username, password) VALUES ` +
+-    `(${sqlString(adminId)}, ${sqlString(username)}, ${sqlString(hash)});`
+-  );
++  return {
++    text: "INSERT INTO app_admin (id, username, password) VALUES ($1, $2, $3)",
++    values: [newEntityId("ADMIN"), username, hash],
++  };
+ }

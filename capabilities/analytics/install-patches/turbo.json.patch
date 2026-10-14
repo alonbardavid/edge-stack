@@ -1,0 +1,12 @@
+diff --git a/turbo.json b/turbo.json
+index ae06258..8ee8575 100644
+--- a/turbo.json
++++ b/turbo.json
+@@ -4,6 +4,7 @@
+   "tasks": {
+     "build": {
+       "dependsOn": ["^build"],
++      "env": ["ENVIRONMENT", "ANALYTICS_ENABLED"],
+       "outputs": ["dist/**", ".wrangler/deploy/**"]
+     },
+     "dev": {

@@ -1,0 +1,24 @@
+diff --git a/apps/backend/wrangler.jsonc b/apps/backend/wrangler.jsonc
+index ddf0e13..189366e 100644
+--- a/apps/backend/wrangler.jsonc
++++ b/apps/backend/wrangler.jsonc
+@@ -32,8 +32,18 @@
+ 			"migrations_dir": "../../migrations"
+ 		}
+ 	],
++	// Local dev only simulates sends: .eml files land under
++	// <os-tmpdir>/miniflare-*/email/, which the e2e inbox helper reads.
++	"send_email": [
++		{
++			"name": "SEND_EMAIL"
++		}
++	],
+ 	"vars": {
+ 		"FRONTEND_CANONICAL_BASE_URL": "http://localhost:5173",
+-		"BETTER_AUTH_SECRET": "local-dev-secret-please-change-3f9a1c7d8e2b4506"
++		"BETTER_AUTH_SECRET": "local-dev-secret-please-change-3f9a1c7d8e2b4506",
++		// Tagged like every other non-production sender — only production sends
++		// as the bare address. See gen-wrangler-config.mjs's taggedSender().
++		"EMAIL_FROM": "noreply+local@project-name.local"
+ 	}
+ }

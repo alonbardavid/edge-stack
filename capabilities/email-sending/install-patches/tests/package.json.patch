@@ -1,0 +1,12 @@
+diff --git a/tests/package.json b/tests/package.json
+index d1341ca..986036e 100644
+--- a/tests/package.json
++++ b/tests/package.json
+@@ -13,6 +13,7 @@
+     "@playwright/test": "^1.41.0",
+     "@types/node": "^20.11.0",
+     "better-auth": "^1.2.0",
++    "postal-mime": "^3.0.0",
+     "typescript": "^5.3.3"
+   }
+ }

@@ -1,0 +1,46 @@
+diff --git a/scripts/assemble-assets.mjs b/scripts/assemble-assets.mjs
+index 8897d9d..181a149 100644
+--- a/scripts/assemble-assets.mjs
++++ b/scripts/assemble-assets.mjs
+@@ -3,21 +3,33 @@ import { rm, cp, mkdir } from "node:fs/promises";
+ import { fileURLToPath } from "node:url";
+ import { resolve, dirname } from "node:path";
+ 
+-// Must run before `vite build`, which copies apps/backend/public into the
+-// worker's static assets.
++// Must run before `vite build`, which copies apps/<worker>/public into the
++// worker's static assets. Each worker serves one frontend.
+ const here = dirname(fileURLToPath(import.meta.url));
+ const root = resolve(here, "..");
+ 
+-const target = resolve(root, "apps/backend/public");
+-const mainBuild = resolve(root, "apps/frontend/dist/public");
+-const adminBuild = resolve(root, "apps/admin-frontend/dist/public");
++const WORKERS = {
++  backend: { build: "apps/frontend/dist/public", mount: "." },
++  "admin-backend": { build: "apps/admin-frontend/dist/public", mount: "admin" },
++};
+ 
+ async function main() {
++  const worker = process.argv[2] ?? "backend";
++  const assets = WORKERS[worker];
++  if (!assets) {
++    throw new Error(
++      `Unknown worker "${worker}". Expected one of: ${Object.keys(WORKERS).join(", ")}`,
++    );
++  }
++  const target = resolve(root, "apps", worker, "public");
+   await rm(target, { recursive: true, force: true });
+   await mkdir(target, { recursive: true });
+-  await cp(mainBuild, target, { recursive: true });
+-  await cp(adminBuild, resolve(target, "admin"), { recursive: true });
+-  console.log(`Staged assets in ${target} (main at /, admin at /admin)`);
++  await cp(resolve(root, assets.build), resolve(target, assets.mount), {
++    recursive: true,
++  });
++  console.log(
++    `Staged assets in ${target} (${assets.build} at /${assets.mount === "." ? "" : assets.mount})`,
++  );
+ }
+ 
+ main().catch((err) => {

@@ -1,0 +1,17 @@
+diff --git a/apps/frontend/src/logic/authentication/useLogout.ts b/apps/frontend/src/logic/authentication/useLogout.ts
+index 7925f35..78f3b41 100644
+--- a/apps/frontend/src/logic/authentication/useLogout.ts
++++ b/apps/frontend/src/logic/authentication/useLogout.ts
+@@ -1,8 +1,12 @@
+ import { useCallback } from "react";
+ import { signOut } from "./client";
++import { analytics } from "../analytics/client";
+ 
+ export function useLogout() {
+   return useCallback(async () => {
++    analytics.capture("signed_out");
++    // The next person to sign in on this browser must not inherit this id.
++    analytics.reset();
+     await signOut();
+     window.location.reload();
+   }, []);

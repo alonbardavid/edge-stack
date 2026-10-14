@@ -1,0 +1,18 @@
+diff --git a/libs/identity/src/auth.ts b/libs/identity/src/auth.ts
+index fe5a6bb..631b67b 100644
+--- a/libs/identity/src/auth.ts
++++ b/libs/identity/src/auth.ts
+@@ -1,4 +1,5 @@
+ import { env } from "cloudflare:workers";
++import { analyticsHooks } from "./analytics-hooks";
+ import { betterAuth, type BetterAuthOptions } from "better-auth";
+ import { drizzleAdapter } from "better-auth/adapters/drizzle";
+ import { getDb, authSchema, newEntityId, type Entity } from "@lib/db-models";
+@@ -60,6 +61,7 @@ function buildOptions(): BetterAuthOptions {
+     session: { modelName: "user_sessions" },
+     account: { modelName: "user_accounts" },
+     verification: { modelName: "user_verifications" },
++    databaseHooks: analyticsHooks,
+     emailAndPassword: {
+       enabled: true,
+       disableSignUp: true,

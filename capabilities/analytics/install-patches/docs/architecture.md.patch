@@ -1,0 +1,12 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index a5d9862..6e65262 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -15,6 +15,7 @@ libs/
+   identity/        end-user authentication (better-auth)
+   ds/              design system / theme, incl. the form primitives
+   logging/         LogTape configuration + moduleLogger (see its README)
++  analytics-server/ per-request PostHog event scope for the Worker
+   server-commons/  shared server middleware (errors, request logging)
+ scripts/           build/deploy helpers
+ tests/             Playwright e2e

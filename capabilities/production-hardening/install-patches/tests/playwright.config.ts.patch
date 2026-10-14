@@ -1,0 +1,22 @@
+diff --git a/tests/playwright.config.ts b/tests/playwright.config.ts
+index e8c4568..5a48cef 100644
+--- a/tests/playwright.config.ts
++++ b/tests/playwright.config.ts
+@@ -33,6 +33,17 @@ export default defineConfig({
+       env: { WORKER_PERSIST_TO: ".wrangler-test" },
+       timeout: 120000,
+     },
++    {
++      // Persists into the backend's .wrangler-test, so both workers share the
++      // seeded database. Teed for e2e/logging/request-log.spec.ts.
++      command:
++        "mkdir -p ../../tests/.logs && pnpm exec vite dev 2>&1 | tee ../../tests/.logs/admin-worker.log",
++      url: "http://localhost:8302/admin/",
++      reuseExistingServer: !process.env.CI,
++      cwd: "../apps/admin-backend",
++      env: { WORKER_PERSIST_TO: "../backend/.wrangler-test" },
++      timeout: 120000,
++    },
+     {
+       command: "pnpm dev:ci:frontend",
+       url: "http://localhost:5173",

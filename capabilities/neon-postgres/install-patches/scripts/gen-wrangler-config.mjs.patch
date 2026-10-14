@@ -1,0 +1,59 @@
+diff --git a/scripts/gen-wrangler-config.mjs b/scripts/gen-wrangler-config.mjs
+index 8fadf76..1cb10ea 100644
+--- a/scripts/gen-wrangler-config.mjs
++++ b/scripts/gen-wrangler-config.mjs
+@@ -1,22 +1,20 @@
+ #!/usr/bin/env node
+ import { readFileSync, writeFileSync } from "node:fs";
+ import { fileURLToPath } from "node:url";
+-import { resolve, dirname, relative } from "node:path";
++import { resolve, dirname } from "node:path";
+ import { environmentFor } from "./lib/environments.mjs";
+ 
+ const here = dirname(fileURLToPath(import.meta.url));
+ const backendDir = resolve(here, "../apps/backend");
+-const migrationsDir = resolve(here, "../migrations");
+ 
+ // Stamps per-target overrides onto the config emitted by `pnpm build` (run it
+-// first). DB_ID is required because `wrangler d1 migrations apply --remote`
+-// needs a database_id in config, and wrangler.jsonc deliberately has none.
++// first). DB_CONNECTION_STRING is the target's Neon branch, resolved by the
++// deploy workflow at deploy time.
+ const target = requireEnv("TARGET");
+ const environment = environmentFor(target);
+ const OVERRIDES = {
+   name: environment.workerName,
+-  databaseName: requireEnv("DB_NAME"),
+-  databaseId: requireEnv("DB_ID"),
++  databaseUrl: requireEnv("DB_CONNECTION_STRING"),
+   frontendCanonicalBaseUrl:
+     environment.canonicalBaseUrl ?? requireEnv("DEPLOY_ORIGIN"),
+   authAllowedHosts: environment.allowedHosts.join(","),
+@@ -31,17 +29,9 @@ function main() {
+ 
+   config.name = OVERRIDES.name;
+   delete config.env;
+-  config.d1_databases = [
+-    {
+-      binding: "DB",
+-      database_name: OVERRIDES.databaseName,
+-      database_id: OVERRIDES.databaseId,
+-      // Relative to the generated config file, not apps/backend.
+-      migrations_dir: relative(dirname(out), migrationsDir),
+-    },
+-  ];
+   config.vars = {
+     ...config.vars,
++    DB_CONNECTION_STRING: OVERRIDES.databaseUrl,
+     FRONTEND_CANONICAL_BASE_URL: OVERRIDES.frontendCanonicalBaseUrl,
+     AUTH_ALLOWED_HOSTS: OVERRIDES.authAllowedHosts,
+     // Every remote target (preview/staging/prod) runs in production mode. Local
+@@ -53,7 +43,7 @@ function main() {
+ 
+   writeFileSync(out, JSON.stringify(config, null, 2) + "\n");
+   console.log(
+-    `Wrote ${out} (target=${target}, name=${config.name}, db=${OVERRIDES.databaseName}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
++    `Wrote ${out} (target=${target}, name=${config.name}, db=${new URL(OVERRIDES.databaseUrl).host}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
+   );
+ }
+ 

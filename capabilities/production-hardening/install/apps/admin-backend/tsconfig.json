@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["@cloudflare/workers-types"],
+    "lib": ["ES2022"]
+  },
+  "references": [
+    { "path": "../../libs/admin-api" },
+    { "path": "../../libs/db-models" },
+    { "path": "../../libs/logging" },
+    { "path": "../../libs/server-commons" }
+  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

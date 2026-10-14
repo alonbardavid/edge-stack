@@ -1,0 +1,28 @@
+diff --git a/scripts/lib/environments.mjs b/scripts/lib/environments.mjs
+index dd9d29b..4d3b081 100644
+--- a/scripts/lib/environments.mjs
++++ b/scripts/lib/environments.mjs
+@@ -18,12 +18,14 @@ const STAGING_WORKERS_DEV = "*project-name-staging.*.workers.dev";
+ 
+ export const ENVIRONMENTS = {
+   production: {
++    environment: "production",
+     workerName: "project-name",
+     canonicalBaseUrl: "https://REPLACE_WITH_PROD_URL",
+     allowedHosts: PRODUCTION_HOSTS,
+     outFile: "wrangler.generated.production.json",
+   },
+   staging: {
++    environment: "staging",
+     workerName: "project-name-staging",
+     // The account's workers.dev subdomain is resolved by the workflow.
+     canonicalBaseUrl: null,
+@@ -31,6 +33,8 @@ export const ENVIRONMENTS = {
+     outFile: "wrangler.generated.staging.json",
+   },
+   preview: {
++    // A preview is a version of the staging Worker and may be promoted onto it.
++    environment: "staging",
+     workerName: "project-name-staging",
+     // The branch alias and account subdomain are resolved by the workflow.
+     canonicalBaseUrl: null,

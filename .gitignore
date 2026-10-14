@@ -1,0 +1,22 @@
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Guard against accidentally committing build/dep artifacts if anyone runs the template in place.
+template/**/node_modules/
+template/**/dist/
+template/**/.turbo/
+template/**/.wrangler/
+template/**/*.tsbuildinfo
+template/.pnpm-store/
+template/**/.dev.vars
+template/**/.env
+template/**/wrangler.generated.toml
+template/**/playwright-report/
+template/**/test-results/

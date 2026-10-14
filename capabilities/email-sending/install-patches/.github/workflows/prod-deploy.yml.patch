@@ -1,0 +1,15 @@
+diff --git a/.github/workflows/prod-deploy.yml b/.github/workflows/prod-deploy.yml
+index 4ac7951..2e1d05d 100644
+--- a/.github/workflows/prod-deploy.yml
++++ b/.github/workflows/prod-deploy.yml
+@@ -72,6 +72,10 @@ jobs:
+           TARGET: production
+           DB_NAME: ${{ steps.d1.outputs.db_name }}
+           DB_ID: ${{ steps.d1.outputs.id }}
++          # Sender for outbound email. Must be an onboarded/verified email
++          # domain for real delivery (see the Email section in CLAUDE.md).
++          # Deliberately untagged: only non-production senders carry a +tag.
++          EMAIL_FROM: REPLACE_WITH_EMAIL_FROM
+         run: node scripts/gen-wrangler-config.mjs
+ 
+       - name: Apply production migrations

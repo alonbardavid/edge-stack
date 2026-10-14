@@ -1,0 +1,40 @@
+diff --git a/.github/actions/neon-env/action.yml b/.github/actions/neon-env/action.yml
+index 53484b8..2d81753 100644
+--- a/.github/actions/neon-env/action.yml
++++ b/.github/actions/neon-env/action.yml
+@@ -19,6 +19,13 @@ inputs:
+     description: The Neon project name to look for when the key sees several projects.
+     required: false
+     default: project-name
++  refuse-project:
++    description: >-
++      Fail, before touching any branch, when the resolved project has this
++      name. Production and everything else live in separate projects, so each
++      deploy names the other one.
++    required: false
++    default: ""
+   branch:
+     description: >-
+       Neon branch whose connection string to resolve. Leave empty (and
+@@ -73,6 +80,7 @@ runs:
+         NEON_API_KEY: ${{ inputs.api-key }}
+         PROJECT_ID_OVERRIDE: ${{ inputs.project-id }}
+         PROJECT_NAME: ${{ inputs.project-name }}
++        REFUSE_PROJECT: ${{ inputs.refuse-project }}
+         BRANCH: ${{ inputs.branch }}
+         DEFAULT_BRANCH: ${{ inputs.default-branch }}
+         CREATE: ${{ inputs.create }}
+@@ -114,6 +122,13 @@ runs:
+           fi
+           echo "Resolved Neon project from the API key: $PROJECT_ID"
+         fi
++        if [ -n "$REFUSE_PROJECT" ]; then
++          RESOLVED_NAME=$(neon "$API/projects/$PROJECT_ID" | jq -r '.project.name')
++          if [ "$RESOLVED_NAME" = "$REFUSE_PROJECT" ]; then
++            echo "::error::Resolved the Neon project '$RESOLVED_NAME' ($PROJECT_ID), which is the wrong project for this deploy. Production and non-production use separate projects: check which NEON_API_KEY (and NEON_PROJECT_ID) this job got (repo secret, or the production environment's)."
++            exit 1
++          fi
++        fi
+         echo "NEON_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+         echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+ 

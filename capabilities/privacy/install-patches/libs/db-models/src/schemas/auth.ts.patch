@@ -1,0 +1,18 @@
+diff --git a/libs/db-models/src/schemas/auth.ts b/libs/db-models/src/schemas/auth.ts
+index 37df494..c5a1185 100644
+--- a/libs/db-models/src/schemas/auth.ts
++++ b/libs/db-models/src/schemas/auth.ts
+@@ -15,9 +15,11 @@ export const user = sqliteTable("user", {
+   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+     .notNull(),
+-  // Soft-delete marker. Present for consistency with other app tables; not yet
+-  // enforced (better-auth manages this table and does not filter on it).
++  // A deleted user keeps its row; sign-in refuses it (libs/identity's
++  // deleted-accounts guard), since better-auth does not filter on this.
+   deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
++  // Set once the personal data has been scrambled; never restored.
++  nukedAt: integer("nuked_at", { mode: "timestamp_ms" }),
+ });
+ 
+ export const userSessions = sqliteTable(

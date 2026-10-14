@@ -1,0 +1,12 @@
+diff --git a/.gitignore b/.gitignore
+index 3e1b2e5..0807467 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -17,6 +17,7 @@ dist
+ .wrangler
+ .wrangler-test
+ apps/backend/public
++apps/admin-backend/public
+ 
+ # Local dev databases
+ .db-cache

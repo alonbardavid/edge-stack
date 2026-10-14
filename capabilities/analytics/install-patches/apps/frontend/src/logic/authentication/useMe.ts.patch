@@ -1,0 +1,12 @@
+diff --git a/apps/frontend/src/logic/authentication/useMe.ts b/apps/frontend/src/logic/authentication/useMe.ts
+index da56d63..7e19b44 100644
+--- a/apps/frontend/src/logic/authentication/useMe.ts
++++ b/apps/frontend/src/logic/authentication/useMe.ts
+@@ -11,6 +11,7 @@ export function useMe() {
+ 
+   return {
+     isLoggedIn: !!data,
++    userId: data?.user.id ?? null,
+     name: data?.user.name ?? null,
+     email: data?.user.email ?? null,
+     isInitializing: isPending && !resolvedOnce,

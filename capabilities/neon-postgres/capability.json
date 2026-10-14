@@ -1,0 +1,7 @@
+{
+  "name": "neon-postgres",
+  "version": "0.1.0",
+  "deliveredAs": "add-on",
+  "description": "Replaces Cloudflare D1 with Neon serverless Postgres: pg-core Drizzle schemas, a request-scoped connection (withDb/getDb/withTransaction, Neon serverless driver on Neon hosts, node-postgres elsewhere), hand-written SQL migrations run by umzug, a local Postgres from npm (embedded-postgres, no Docker) for dev, e2e and CI, and deploy workflows that run every environment on its own Neon branch — production on the default branch, staging on `staging`, each preview on a copy-on-write branch of staging — migrating before every deploy. Installed on demand by add-edge-capability; not part of a fresh project until added.",
+  "manifestKey": "neon-postgres"
+}

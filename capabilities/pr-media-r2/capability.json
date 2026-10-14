@@ -1,0 +1,7 @@
+{
+  "name": "pr-media-r2",
+  "version": "0.1.0",
+  "deliveredAs": "add-on",
+  "description": "PR screenshots and videos hosted in a public, 30-day R2 bucket instead of GitHub attachments, for projects worked on from Claude Code cloud sessions: an upload script (CLOUDFLARE_API_TOKEN over R2's S3 API, or the wrangler login session) that prints ready-to-paste markdown, and a workflow that restores the image markdown cloud sessions strip from PR bodies and comments (anthropics/claude-code#89540). Installed on demand by add-edge-capability; not part of a fresh project until added.",
+  "manifestKey": "pr-media-r2"
+}

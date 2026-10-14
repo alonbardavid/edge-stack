@@ -1,0 +1,12 @@
+diff --git a/README.md b/README.md
+index 89fc2ec..2191c7c 100644
+--- a/README.md
++++ b/README.md
+@@ -27,6 +27,7 @@ end-users from `/admin`.
+ - [Architecture](docs/architecture.md) — layout, the API contract, authentication, the admin app
+ - [Analytics](docs/analytics.md) — PostHog, who emits what, delivery per environment
+ - [Logging](libs/logging/README.md) — `moduleLogger`, request context, verbosity
++- [Privacy](docs/privacy.md) — tracking consent, the policy page, deleting and erasing accounts
+ - [Development](docs/development.md) — local dev, the build, local D1
+ - [Deployment](docs/deployment.md) — preview, staging and production
+ - [Tests](tests/README.md) — e2e traps

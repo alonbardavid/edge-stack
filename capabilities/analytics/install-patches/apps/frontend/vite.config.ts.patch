@@ -1,0 +1,19 @@
+diff --git a/apps/frontend/vite.config.ts b/apps/frontend/vite.config.ts
+index 2453ef8..dce90ec 100644
+--- a/apps/frontend/vite.config.ts
++++ b/apps/frontend/vite.config.ts
+@@ -21,6 +21,14 @@ export default defineConfig({
+     outDir: "dist/public",
+     emptyOutDir: true,
+   },
++  // Every deploy target runs its own build. turbo.json declares both vars on
++  // the build task, or a cached bundle from another target would be replayed.
++  define: {
++    __ANALYTICS_DELIVER__: JSON.stringify(
++      process.env.ENVIRONMENT === "production" ||
++        process.env.ANALYTICS_ENABLED === "true",
++    ),
++  },
+   server: {
+     proxy: {
+       "/api": "http://localhost:8301",

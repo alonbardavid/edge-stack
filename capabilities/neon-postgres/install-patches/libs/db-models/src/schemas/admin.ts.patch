@@ -1,0 +1,54 @@
+diff --git a/libs/db-models/src/schemas/admin.ts b/libs/db-models/src/schemas/admin.ts
+index c0109f5..bac75f7 100644
+--- a/libs/db-models/src/schemas/admin.ts
++++ b/libs/db-models/src/schemas/admin.ts
+@@ -1,20 +1,19 @@
+-import { sql } from "drizzle-orm";
+-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
++import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+ 
+-export const appAdmin = sqliteTable("app_admin", {
++export const appAdmin = pgTable("app_admin", {
+   id: text("id").primaryKey(),
+   username: text("username").notNull().unique(),
+   password: text("password").notNull(),
+-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++    .defaultNow()
+     .notNull(),
+-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++    .defaultNow()
+     .notNull(),
+-  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
++  deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
+ });
+ 
+-export const appAdminSession = sqliteTable(
++export const appAdminSession = pgTable(
+   "app_admin_session",
+   {
+     id: text("id").primaryKey(),
+@@ -22,12 +21,15 @@ export const appAdminSession = sqliteTable(
+       .notNull()
+       .references(() => appAdmin.id, { onDelete: "cascade" }),
+     token: text("token").notNull().unique(),
+-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+-    createdAt: integer("created_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    expiresAt: timestamp("expires_at", {
++      withTimezone: true,
++      mode: "date",
++    }).notNull(),
++    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+   },
+   (table) => [index("app_admin_session_admin_id_idx").on(table.adminId)],

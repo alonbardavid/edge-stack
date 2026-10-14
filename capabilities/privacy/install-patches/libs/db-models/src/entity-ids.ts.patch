@@ -1,0 +1,12 @@
+diff --git a/libs/db-models/src/entity-ids.ts b/libs/db-models/src/entity-ids.ts
+index a637fc5..9efa182 100644
+--- a/libs/db-models/src/entity-ids.ts
++++ b/libs/db-models/src/entity-ids.ts
+@@ -7,6 +7,7 @@ export const ENTITY_PREFIXES = {
+   USER_VERIFICATION: "UV",
+   ADMIN: "ADM",
+   ADMIN_SESSION: "AS",
++  TRACKING_SETTING: "TS",
+ } as const satisfies Record<string, Uppercase<string>>;
+ 
+ export type Entity = keyof typeof ENTITY_PREFIXES;

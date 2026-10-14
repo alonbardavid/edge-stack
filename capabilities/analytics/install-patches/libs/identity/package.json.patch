@@ -1,0 +1,12 @@
+diff --git a/libs/identity/package.json b/libs/identity/package.json
+index 18eaea9..4d846cb 100644
+--- a/libs/identity/package.json
++++ b/libs/identity/package.json
+@@ -17,6 +17,7 @@
+     "clean": "rm -rf dist *.tsbuildinfo"
+   },
+   "dependencies": {
++    "@lib/analytics-server": "workspace:*",
+     "@lib/db-models": "workspace:*",
+     "@lib/logging": "workspace:*",
+     "better-auth": "^1.2.0",

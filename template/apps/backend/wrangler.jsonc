@@ -1,0 +1,39 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "project-name-local",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-02-13",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	// No "directory": vite build sets it to its client output (dist/client).
+	"assets": {
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": [
+			"/api/*",
+			"/admin",
+			"/admin/*"
+		]
+	},
+	"observability": {
+		"enabled": true,
+		"logs": {
+			"invocation_logs": true,
+			"head_sampling_rate": 1
+		}
+	},
+	// Never add a database_id: scripts/gen-wrangler-config.mjs injects one
+	// per deploy target.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "project-name-local",
+			"migrations_dir": "../../migrations"
+		}
+	],
+	"vars": {
+		"FRONTEND_CANONICAL_BASE_URL": "http://localhost:5173",
+		"BETTER_AUTH_SECRET": "local-dev-secret-please-change-3f9a1c7d8e2b4506"
+	}
+}

@@ -1,0 +1,26 @@
+{
+  "name": "edge-stack",
+  "description": "Create, update, and extend opinionated edge-stack projects (pnpm + Turbo monorepo, Cloudflare Workers + D1, Hono + oRPC, React/Vite, Playwright, GitHub Actions). Bundles a project template, a per-capability version/patch registry, and three skills.",
+  "version": "0.2.0",
+  "author": {
+    "name": "alonbd",
+    "email": "me@alonbd.com"
+  },
+  "keywords": [
+    "cloudflare",
+    "cloudflare-access",
+    "hono",
+    "orpc",
+    "react",
+    "pnpm",
+    "turbo",
+    "d1",
+    "neon",
+    "postgres",
+    "posthog",
+    "analytics",
+    "privacy",
+    "scaffold",
+    "codemod"
+  ]
+}

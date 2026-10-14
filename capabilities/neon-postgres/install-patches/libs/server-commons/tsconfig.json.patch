@@ -1,0 +1,13 @@
+diff --git a/libs/server-commons/tsconfig.json b/libs/server-commons/tsconfig.json
+index 62a7404..de149ba 100644
+--- a/libs/server-commons/tsconfig.json
++++ b/libs/server-commons/tsconfig.json
+@@ -9,7 +9,7 @@
+     "types": ["@cloudflare/workers-types", "node"],
+     "lib": ["ES2022"]
+   },
+-  "references": [{ "path": "../logging" }],
++  "references": [{ "path": "../db-models" }, { "path": "../logging" }],
+   "include": ["src/**/*"],
+   "exclude": ["node_modules", "dist"]
+ }

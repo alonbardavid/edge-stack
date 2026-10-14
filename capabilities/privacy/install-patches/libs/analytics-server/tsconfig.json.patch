@@ -1,0 +1,17 @@
+diff --git a/libs/analytics-server/tsconfig.json b/libs/analytics-server/tsconfig.json
+index 468298b..51d4f11 100644
+--- a/libs/analytics-server/tsconfig.json
++++ b/libs/analytics-server/tsconfig.json
+@@ -9,7 +9,11 @@
+     "types": ["@cloudflare/workers-types", "node"],
+     "lib": ["ES2022"]
+   },
+-  "references": [{ "path": "../contract" }, { "path": "../logging" }],
++  "references": [
++    { "path": "../contract" },
++    { "path": "../db-models" },
++    { "path": "../logging" }
++  ],
+   "include": ["src/**/*"],
+   "exclude": ["node_modules", "dist"]
+ }

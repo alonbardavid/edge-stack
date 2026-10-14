@@ -1,0 +1,24 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 95d4168..478bd73 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -21,7 +21,7 @@ It is a rulebook, not a changelog.
+   only what is true now, in the present tense. History belongs in git.
+ - **Never belongs here:** how a feature works, change logs, issue/PR numbers, post-mortems,
+   or anything one `grep` would answer. Put it in the right doc and link to it: `README.md`
+-  indexes them — architecture, development and deployment live under `docs/`, a lib's
++  indexes them — architecture, development, deployment and emails live under `docs/`, a lib's
+   reference in its own `README.md`, test traps in `tests/README.md`, code-review rules in
+   `.claude/commands/check-conventions.md`.
+ - Memory goes in this project file, not per-user memory (`~/.claude/…`).
+@@ -42,6 +42,10 @@ It is a rulebook, not a changelog.
+ - **The API is contract-first** (oRPC): declare a procedure in `@lib/contract` before
+   implementing it on the `api` implementer, which admits only signed-in users. See
+   `docs/architecture.md`.
++- **Every email goes through `sendEmail`** in `@lib/email-service`, rendered from a
++  react-email template with inline `style` objects — never `<Tailwind>`, which trips
++  workerd's startup CPU limit on deploy.
++- Never hardcode the product name; use `PRODUCT_DISPLAY_NAME` from `@lib/contract/constants`.
+ - Every table has an `id` column, except join tables with a composite key. Its value is
+   `newEntityId("<ENTITY>")` from `@lib/db-models`; a new table adds its uppercase prefix to
+   `ENTITY_PREFIXES` there first.

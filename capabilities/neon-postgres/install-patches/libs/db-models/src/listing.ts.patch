@@ -1,0 +1,122 @@
+diff --git a/libs/db-models/src/listing.ts b/libs/db-models/src/listing.ts
+index a377a1d..ade736b 100644
+--- a/libs/db-models/src/listing.ts
++++ b/libs/db-models/src/listing.ts
+@@ -11,7 +11,7 @@ import {
+   type SQL,
+   type Subquery,
+ } from "drizzle-orm";
+-import type { SQLiteColumn, SQLiteSelect } from "drizzle-orm/sqlite-core";
++import type { PgColumn, PgSelect } from "drizzle-orm/pg-core";
+ import { getDb } from "./db";
+ import { moduleLogger } from "@lib/logging";
+ 
+@@ -45,12 +45,10 @@ export interface ListResult<Row> {
+ 
+ export type ListFilter<Value> = (value: Value) => SQL | undefined;
+ 
+-type Fields<Select extends SQLiteSelect> = Select["_"]["selectedFields"];
++type Fields<Select extends PgSelect> = Select["_"]["selectedFields"];
+ 
+-type ColumnKey<Select extends SQLiteSelect> = {
+-  [K in keyof Fields<Select>]: Fields<Select>[K] extends SQLiteColumn
+-    ? K
+-    : never;
++type ColumnKey<Select extends PgSelect> = {
++  [K in keyof Fields<Select>]: Fields<Select>[K] extends PgColumn ? K : never;
+ }[keyof Fields<Select>] &
+   string;
+ 
+@@ -58,7 +56,7 @@ type FilterKey<Request> = Exclude<keyof Request & string, keyof ListRequest>;
+ 
+ type FilterValue<Request, K extends keyof Request> = NonNullable<Request[K]>;
+ 
+-type ColumnFilterKey<Select extends SQLiteSelect, Request> = {
++type ColumnFilterKey<Select extends PgSelect, Request> = {
+   [K in FilterKey<Request>]: K extends keyof Fields<Select>
+     ? Fields<Select>[K] extends { _: { data: infer Data } }
+       ? FilterValue<Request, K> extends Data
+@@ -70,7 +68,7 @@ type ColumnFilterKey<Select extends SQLiteSelect, Request> = {
+ 
+ // A filter named after a same-typed selected column is an equality test by
+ // default; any other filter needs a function.
+-type ListFilters<Select extends SQLiteSelect, Request> = {
++type ListFilters<Select extends PgSelect, Request> = {
+   [K in Exclude<
+     FilterKey<Request>,
+     ColumnFilterKey<Select, Request>
+@@ -79,10 +77,10 @@ type ListFilters<Select extends SQLiteSelect, Request> = {
+   [K in ColumnFilterKey<Select, Request>]?: ListFilter<FilterValue<Request, K>>;
+ };
+ 
+-type SelectsId<Select extends SQLiteSelect> =
++type SelectsId<Select extends PgSelect> =
+   "id" extends ColumnKey<Select> ? unknown : { selectAnIdColumn: never };
+ 
+-export type ListOptions<Select extends SQLiteSelect, Request> = {
++export type ListOptions<Select extends PgSelect, Request> = {
+   defaultSort?: ColumnKey<Select>;
+ } & (object extends ListFilters<Select, Request>
+   ? { filters?: ListFilters<Select, Request> }
+@@ -93,7 +91,7 @@ export type ListOptions<Select extends SQLiteSelect, Request> = {
+ // list offset or the id of the row to continue after; the row form compares
+ // `(sort column, id)` against that row so the database reads only the page.
+ export async function paginate<
+-  Select extends SQLiteSelect,
++  Select extends PgSelect,
+   Request extends ListRequest<ColumnKey<Select>>,
+ >(
+   select: Select & SelectsId<Select>,
+@@ -143,13 +141,13 @@ export async function paginate<
+ 
+ // A "contains every term" search, with LIKE wildcards in the terms escaped.
+ export function matchesAllTerms(
+-  expression: SQLiteColumn | SQL,
++  expression: PgColumn | SQL,
+   terms: string[],
+ ): SQL | undefined {
+   return and(
+     ...terms.map(
+       (term) =>
+-        sql`${expression} like ${`%${escapeLikePattern(term)}%`} escape '\\'`,
++        sql`${expression} ilike ${`%${escapeLikePattern(term)}%`} escape '\\'`,
+     ),
+   );
+ }
+@@ -158,12 +156,12 @@ export function escapeLikePattern(text: string): string {
+   return text.replace(/[\\%_]/g, "\\$&");
+ }
+ 
+-function columnOf(fields: Record<string, unknown>, name: string): SQLiteColumn {
++function columnOf(fields: Record<string, unknown>, name: string): PgColumn {
+   const column = fields[name];
+   if (!is(column, Column)) {
+     throw new Error(`"${name}" is not a selected column`);
+   }
+-  return column as SQLiteColumn;
++  return column as PgColumn;
+ }
+ 
+ function filterConditions(
+@@ -192,8 +190,8 @@ function parsePosition(cursor: string | undefined): {
+ }
+ 
+ function afterRow(
+-  id: SQLiteColumn,
+-  sortColumn: SQLiteColumn | null,
++  id: PgColumn,
++  sortColumn: PgColumn | null,
+   dir: "asc" | "desc",
+   afterId: string | undefined,
+ ): SQL | undefined {
+@@ -208,8 +206,8 @@ function afterRow(
+ }
+ 
+ function orderFor(
+-  id: SQLiteColumn,
+-  sortColumn: SQLiteColumn | null,
++  id: PgColumn,
++  sortColumn: PgColumn | null,
+   dir: "asc" | "desc",
+ ): SQL[] {
+   const direction = dir === "asc" ? asc : desc;

@@ -1,0 +1,9 @@
+diff --git a/README.md b/README.md
+index 5750d71..0267086 100644
+--- a/README.md
++++ b/README.md
+@@ -30,3 +30,4 @@ end-users from `/admin`.
+ - [Deployment](docs/deployment.md) — preview, staging and production
+ - [Tests](tests/README.md) — e2e traps
+ - [Decisions](docs/adrs/) — architecture decision records
++- [PR media](docs/pr-media.md) — uploading PR screenshots and videos

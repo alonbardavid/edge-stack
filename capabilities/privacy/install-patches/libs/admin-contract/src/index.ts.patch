@@ -1,0 +1,84 @@
+diff --git a/libs/admin-contract/src/index.ts b/libs/admin-contract/src/index.ts
+index b04ac4c..7f1330d 100644
+--- a/libs/admin-contract/src/index.ts
++++ b/libs/admin-contract/src/index.ts
+@@ -1,18 +1,35 @@
+ import { oc, type ContractRouterClient } from "@orpc/contract";
+ import { z } from "zod";
+-import { listPageSchema, listQuerySchema } from "@lib/contract";
++import {
++  listPageSchema,
++  listQuerySchema,
++  trackingSettingSchema,
++} from "@lib/contract";
++
++export { TRACKING_SETTINGS, type TrackingSetting } from "@lib/contract";
+ 
+ export const adminSchema = z.object({
+   id: z.string(),
+   username: z.string(),
+ });
+ 
++// Only a deleted account can be restored or nuked; a nuked one is deleted and
++// scrambled for good.
++export const ACCOUNT_STATES = ["active", "deleted", "nuked"] as const;
++
++export const accountStateSchema = z.enum(ACCOUNT_STATES);
++
++export type AccountState = z.infer<typeof accountStateSchema>;
++
+ export const managedUserSchema = z.object({
+   id: z.string(),
+   name: z.string(),
+   email: z.string(),
+   emailVerified: z.boolean(),
+   createdAt: z.number(),
++  state: accountStateSchema,
++  // null until the user or an admin decides; their region's default applies.
++  tracking: trackingSettingSchema.nullable(),
+ });
+ 
+ export type ManagedUser = z.infer<typeof managedUserSchema>;
+@@ -27,6 +44,12 @@ export type UserListQuery = z.infer<typeof userListQuerySchema>;
+ const idSchema = z.object({ id: z.string() });
+ const okSchema = z.object({ ok: z.literal(true) });
+ 
++// A lifecycle action either happens or says why not.
++const LIFECYCLE_ERRORS = {
++  BAD_REQUEST: { message: "This action does not apply to the user's state" },
++  NOT_FOUND: { message: "User not found" },
++};
++
+ export const adminContract = {
+   me: oc
+     .route({ method: "GET", path: "/api/admin/auth/me" })
+@@ -55,6 +78,29 @@ export const adminContract = {
+     .errors({ NOT_FOUND: { message: "User not found" } })
+     .input(idSchema.extend({ newPassword: z.string().min(8) }))
+     .output(okSchema),
++  setUserTracking: oc
++    .route({ method: "PUT", path: "/api/admin/users/{id}/tracking" })
++    .errors({ NOT_FOUND: { message: "User not found" } })
++    .input(idSchema.extend({ tracking: trackingSettingSchema }))
++    .output(okSchema),
++  deleteUser: oc
++    .route({ method: "POST", path: "/api/admin/users/{id}/delete" })
++    .errors(LIFECYCLE_ERRORS)
++    .input(idSchema)
++    .output(okSchema),
++  restoreUser: oc
++    .route({ method: "POST", path: "/api/admin/users/{id}/restore" })
++    .errors(LIFECYCLE_ERRORS)
++    .input(idSchema)
++    .output(okSchema),
++  nukeUser: oc
++    .route({ method: "POST", path: "/api/admin/users/{id}/nuke" })
++    .errors({
++      ...LIFECYCLE_ERRORS,
++      SERVICE_UNAVAILABLE: { message: "PostHog erasure is not configured" },
++    })
++    .input(idSchema)
++    .output(okSchema),
+ };
+ 
+ export type AdminContract = typeof adminContract;

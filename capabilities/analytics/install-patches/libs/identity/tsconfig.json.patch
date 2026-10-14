@@ -1,0 +1,17 @@
+diff --git a/libs/identity/tsconfig.json b/libs/identity/tsconfig.json
+index 492da0c..21552c0 100644
+--- a/libs/identity/tsconfig.json
++++ b/libs/identity/tsconfig.json
+@@ -9,7 +9,11 @@
+     "types": ["@cloudflare/workers-types"],
+     "lib": ["ES2022"]
+   },
+-  "references": [{ "path": "../db-models" }, { "path": "../logging" }],
++  "references": [
++    { "path": "../analytics-server" },
++    { "path": "../db-models" },
++    { "path": "../logging" }
++  ],
+   "include": ["src/**/*"],
+   "exclude": ["node_modules", "dist"]
+ }

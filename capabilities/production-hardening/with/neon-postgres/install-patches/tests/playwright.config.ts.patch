@@ -1,0 +1,22 @@
+diff --git a/tests/playwright.config.ts b/tests/playwright.config.ts
+index 80d3f75..044f5b3 100644
+--- a/tests/playwright.config.ts
++++ b/tests/playwright.config.ts
+@@ -36,14 +36,14 @@ export default defineConfig({
+       timeout: 120000,
+     },
+     {
+-      // Persists into the backend's .wrangler-test, so both workers share the
+-      // seeded database. Teed for e2e/logging/request-log.spec.ts.
++      // The same test database as the backend, whose command starts Postgres.
++      // Teed for e2e/logging/request-log.spec.ts.
+       command:
+         "mkdir -p ../../tests/.logs && pnpm exec vite dev 2>&1 | tee ../../tests/.logs/admin-worker.log",
+       url: "http://localhost:8302/admin/",
+       reuseExistingServer: !process.env.CI,
+       cwd: "../apps/admin-backend",
+-      env: { WORKER_PERSIST_TO: "../backend/.wrangler-test" },
++      env: { WORKER_DATABASE_URL: TEST_DATABASE_URL },
+       timeout: 120000,
+     },
+     {

@@ -1,0 +1,45 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 95d4168..ee204f2 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,7 +1,7 @@
+ # Project Rules
+ 
+ project-name — an edge-stack pnpm + Turbo monorepo on Cloudflare Workers: a Hono API and two
+-React SPAs served from one Worker, on D1, with Playwright e2e.
++React SPAs served from one Worker, on Neon Postgres, with Playwright e2e.
+ 
+ ## Maintaining this file
+ 
+@@ -21,7 +21,7 @@ It is a rulebook, not a changelog.
+   only what is true now, in the present tense. History belongs in git.
+ - **Never belongs here:** how a feature works, change logs, issue/PR numbers, post-mortems,
+   or anything one `grep` would answer. Put it in the right doc and link to it: `README.md`
+-  indexes them — architecture, development and deployment live under `docs/`, a lib's
++  indexes them — architecture, development, deployment and the database live under `docs/`, a lib's
+   reference in its own `README.md`, test traps in `tests/README.md`, code-review rules in
+   `.claude/commands/check-conventions.md`.
+ - Memory goes in this project file, not per-user memory (`~/.claude/…`).
+@@ -42,6 +42,10 @@ It is a rulebook, not a changelog.
+ - **The API is contract-first** (oRPC): declare a procedure in `@lib/contract` before
+   implementing it on the `api` implementer, which admits only signed-in users. See
+   `docs/architecture.md`.
++- **The database is Postgres, never D1.** A capability added later, or code taken from a D1
++  edge-stack project, may arrive written for D1 (`d1_databases`, `env.DB`, `wrangler d1`,
++  `sqliteTable`, `.run()` / `.all()`): port it as part of the change — `pgTable` schemas,
++  `getDb()` / `withTransaction`, and a migration in `migrations/` (`pnpm db:new <name>`).
+ - Every table has an `id` column, except join tables with a composite key. Its value is
+   `newEntityId("<ENTITY>")` from `@lib/db-models`; a new table adds its uppercase prefix to
+   `ENTITY_PREFIXES` there first.
+@@ -53,6 +57,11 @@ It is a rulebook, not a changelog.
+ 
+ - A Hono middleware must **`return withContext(…, next)`** — LogTape's context is a scope,
+   not a store, so fields added outside it are silently dropped.
++- Nothing generates SQL from `libs/db-models/src/schemas/`: a schema change needs its own
++  hand-written migration (`pnpm db:new <name>`).
++- Never edit or rename a migration that has run anywhere — a reused preview Neon branch
++  keeps its `schema_migrations` rows and silently skips the changed file. Write a new one.
++- `count()` / `sum()` come back from `pg` as strings; cast in SQL (`cast(... as int)`).
+ - `turbo.json`'s backend `build` outputs must include `.wrangler/deploy/**`, or a cache hit
+   restores `dist/` without the redirect and deploy-config generation fails.
+ - `kysely` is pinned in `pnpm.overrides` because better-auth statically imports its kysely

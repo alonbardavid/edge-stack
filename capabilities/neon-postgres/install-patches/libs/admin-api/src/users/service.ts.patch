@@ -1,0 +1,50 @@
+diff --git a/libs/admin-api/src/users/service.ts b/libs/admin-api/src/users/service.ts
+index 56701ca..501b973 100644
+--- a/libs/admin-api/src/users/service.ts
++++ b/libs/admin-api/src/users/service.ts
+@@ -1,6 +1,7 @@
+ import { hashPassword } from "better-auth/crypto";
+ import {
+   getDb,
++  withTransaction,
+   paginate,
+   matchesAllTerms,
+   user,
+@@ -64,21 +65,23 @@ export async function createUser(input: {
+ }): Promise<ManagedUser> {
+   const userId = newEntityId("USER");
+   const hash = await hashPassword(input.password);
+-  await getDb().insert(user).values({
+-    id: userId,
+-    name: input.name,
+-    email: input.email,
+-    emailVerified: true,
+-  });
+-  await getDb()
+-    .insert(userAccounts)
+-    .values({
+-      id: newEntityId("USER_ACCOUNT"),
+-      accountId: userId,
+-      providerId: "credential",
+-      userId,
+-      password: hash,
++  await withTransaction(async () => {
++    await getDb().insert(user).values({
++      id: userId,
++      name: input.name,
++      email: input.email,
++      emailVerified: true,
+     });
++    await getDb()
++      .insert(userAccounts)
++      .values({
++        id: newEntityId("USER_ACCOUNT"),
++        accountId: userId,
++        providerId: "credential",
++        userId,
++        password: hash,
++      });
++  });
+   log.info("user created", { userId });
+   return {
+     id: userId,

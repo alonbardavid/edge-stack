@@ -1,0 +1,28 @@
+{
+  "name": "@app/admin-backend",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && node ../../scripts/assemble-assets.mjs admin-backend && vite build",
+    "dev": "vite dev",
+    "dev:ci": "vite dev",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist public .wrangler *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@lib/admin-api": "workspace:*",
+    "@lib/db-models": "workspace:*",
+    "@lib/logging": "workspace:*",
+    "@lib/server-commons": "workspace:*",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@app/admin-frontend": "workspace:*",
+    "@cloudflare/vite-plugin": "^1.62.1",
+    "@cloudflare/workers-types": "^4.20260310.1",
+    "typescript": "^5.3.3",
+    "vite": "^7.1.0",
+    "wrangler": "^4.143.1"
+  }
+}

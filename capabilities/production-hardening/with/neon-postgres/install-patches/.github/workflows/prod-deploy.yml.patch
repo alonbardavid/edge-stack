@@ -1,0 +1,58 @@
+diff --git a/.github/workflows/prod-deploy.yml b/.github/workflows/prod-deploy.yml
+index 50d932c..6c498d0 100644
+--- a/.github/workflows/prod-deploy.yml
++++ b/.github/workflows/prod-deploy.yml
+@@ -60,6 +60,7 @@ jobs:
+         with:
+           api-key: ${{ secrets.NEON_API_KEY }}
+           project-id: ${{ secrets.NEON_PROJECT_ID }}
++          refuse-project: project-name-staging
+           default-branch: "true"
+ 
+       # Migrations run BEFORE the deploy, so new code never sees an older schema.
+@@ -68,10 +69,44 @@ jobs:
+           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+         run: pnpm db:migrate
+ 
++      # The Workers connect as the app role, which cannot change the schema;
++      # only this job, as the branch owner, migrates.
++      - name: Ensure the app role
++        id: app-db
++        env:
++          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
++          APP_ROLE_PASSWORD: ${{ secrets.DB_APP_PASSWORD }}
++        run: node scripts/ensure-app-role.mjs
++
++      # Optional: a Hyperdrive config named project-name-prod puts connection
++      # pooling in front of Neon (docs/production.md). Absent, the Workers
++      # connect to Neon directly.
++      - name: Resolve production Hyperdrive
++        id: hyperdrive
++        run: |
++          set -euo pipefail
++          RESPONSE=$(curl -sS -w '\n%{http_code}' \
++            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
++            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/hyperdrive/configs")
++          STATUS=$(printf '%s' "$RESPONSE" | tail -n1)
++          if [ "$STATUS" != "200" ]; then
++            echo "::warning::Could not list Hyperdrive configs (HTTP $STATUS): deploying without Hyperdrive. Give the token Hyperdrive: Read if project-name-prod exists."
++            exit 0
++          fi
++          ID=$(printf '%s' "$RESPONSE" | sed '$d' \
++            | jq -r '.result[] | select(.name == "project-name-prod") | .id')
++          if [ -n "$ID" ]; then
++            echo "Using Hyperdrive project-name-prod ($ID)"
++          else
++            echo "No Hyperdrive config named project-name-prod: the Workers connect to Neon directly"
++          fi
++          echo "id=$ID" >> "$GITHUB_OUTPUT"
++
+       - name: Generate production wrangler config
+         env:
+           TARGET: production
+-          DB_CONNECTION_STRING: ${{ steps.neon.outputs.db_url }}
++          DB_CONNECTION_STRING: ${{ steps.app-db.outputs.db_url }}
++          HYPERDRIVE_ID: ${{ steps.hyperdrive.outputs.id }}
+         run: node scripts/gen-wrangler-config.mjs
+ 
+       - name: Deploy

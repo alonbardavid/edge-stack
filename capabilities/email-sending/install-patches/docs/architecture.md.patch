@@ -1,0 +1,20 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index a5d9862..22f8802 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -29,10 +29,11 @@ better-auth (email + password) in `@lib/identity` (`getAuth()`), mounted on `/ap
+ using its Drizzle adapter over D1 with the `user` / `user_sessions` / `user_accounts` /
+ `user_verifications` tables. Sessions are httpOnly cookies; there is no client token.
+ 
+-There is no self-service sign-up (`emailAndPassword.disableSignUp`). End-users are created
+-from the admin app, which inserts a verified `user` plus a credential `user_accounts` row via
+-`createUser` / `setUserPassword`. `user_verifications` exists only because better-auth's
+-adapter schema expects it.
++Self-service sign-up requires email verification, and forgotten passwords are reset by
++email — see [emails.md](emails.md). The admin app can also create pre-verified end-users,
++inserting a `user` plus a credential `user_accounts` row via `createUser` /
++`setUserPassword`. `user_verifications` exists only because better-auth's adapter schema
++expects it.
+ 
+ The base URL is dynamic: a request host listed in `scripts/lib/environments.mjs` wins, and an
+ unknown host falls back to `FRONTEND_CANONICAL_BASE_URL`, so one Worker version can serve its

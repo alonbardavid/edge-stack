@@ -1,0 +1,18 @@
+diff --git a/.claude/hooks/setup-remote.sh b/.claude/hooks/setup-remote.sh
+index 43b4588..bffd1ea 100755
+--- a/.claude/hooks/setup-remote.sh
++++ b/.claude/hooks/setup-remote.sh
+@@ -37,6 +37,13 @@ if ! pnpm install --frozen-lockfile; then
+   echo "WARN: pnpm install failed — dependencies may be incomplete." >&2
+ fi
+ 
++# Start the local Postgres (and migrate the dev database). As root it runs the
++# cluster as the system `postgres` user — see scripts/local-db-server.mjs.
++echo "Starting local Postgres (pnpm db:start)..." >&2
++if ! pnpm db:start; then
++  echo "WARN: local Postgres failed to start — see .pgdata/local-db.log." >&2
++fi
++
+ # Download the Chromium build that matches @playwright/test. Playwright fetches
+ # it from cdn.playwright.dev, which the environment's network policy must allow.
+ # Idempotent: skips when the build is already cached. Kept non-fatal so the

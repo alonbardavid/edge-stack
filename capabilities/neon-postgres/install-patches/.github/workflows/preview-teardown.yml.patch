@@ -1,0 +1,132 @@
+diff --git a/.github/workflows/preview-teardown.yml b/.github/workflows/preview-teardown.yml
+index 14d650c..c2e35d1 100644
+--- a/.github/workflows/preview-teardown.yml
++++ b/.github/workflows/preview-teardown.yml
+@@ -14,28 +14,17 @@ jobs:
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     env:
+-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
++      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+     steps:
+       - uses: actions/checkout@v6
+ 
+-      - name: Resolve Cloudflare account
+-        id: cf
+-        uses: ./.github/actions/cloudflare-env
++      - name: Resolve Neon project
++        uses: ./.github/actions/neon-env
+         with:
+-          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+-          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
++          api-key: ${{ secrets.NEON_API_KEY }}
++          project-id: ${{ secrets.NEON_PROJECT_ID }}
+ 
+-      - uses: pnpm/action-setup@v5
+-
+-      - uses: actions/setup-node@v6
+-        with:
+-          node-version: lts/*
+-          cache: pnpm
+-
+-      - name: Install dependencies
+-        run: pnpm install --frozen-lockfile
+-
+-      - name: Compute preview D1 name
++      - name: Compute preview Neon branch
+         id: names
+         run: |
+           set -euo pipefail
+@@ -46,41 +35,40 @@ jobs:
+             | cut -c1-40 \
+             | sed 's/-$//')
+           HASH=$(printf '%s' "$BRANCH" | sha1sum | cut -c1-6)
+-          DB_NAME="project-name-preview-${SANITIZED}-${HASH}"
+-          echo "db_name=$DB_NAME" >> "$GITHUB_OUTPUT"
++          echo "neon_branch=preview/${SANITIZED}-${HASH}" >> "$GITHUB_OUTPUT"
+ 
+-      - name: Delete preview D1
++      - name: Delete preview Neon branch
+         continue-on-error: true
+-        run: pnpm --filter @app/backend exec wrangler d1 delete "${{ steps.names.outputs.db_name }}" --skip-confirmation
++        run: |
++          set -euo pipefail
++          NAME="${{ steps.names.outputs.neon_branch }}"
++          API="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
++          ID=$(curl -fsS -H "Authorization: Bearer $NEON_API_KEY" "$API" \
++            | jq -r --arg name "$NAME" '[.branches[] | select(.name == $name)][0].id // empty')
++          if [ -z "$ID" ]; then
++            echo "No Neon branch $NAME — nothing to delete"
++            exit 0
++          fi
++          curl -fsS -X DELETE -H "Authorization: Bearer $NEON_API_KEY" "$API/$ID" -o /dev/null
++          echo "Deleted Neon branch $NAME ($ID)"
+ 
+   prune-orphans:
+     if: github.event_name == 'schedule'
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
+     env:
+-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
++      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     steps:
+       - uses: actions/checkout@v6
+ 
+-      - name: Resolve Cloudflare account
+-        id: cf
+-        uses: ./.github/actions/cloudflare-env
++      - name: Resolve Neon project
++        uses: ./.github/actions/neon-env
+         with:
+-          api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+-          account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+-
+-      - uses: pnpm/action-setup@v5
+-
+-      - uses: actions/setup-node@v6
+-        with:
+-          node-version: lts/*
+-          cache: pnpm
+-
+-      - name: Install dependencies
+-        run: pnpm install --frozen-lockfile
++          api-key: ${{ secrets.NEON_API_KEY }}
++          project-id: ${{ secrets.NEON_PROJECT_ID }}
+ 
+-      - name: Build active preview D1 names from live branches
++      - name: Build active preview Neon branch names from live branches
+         run: |
+           set -euo pipefail
+           : > /tmp/active.txt
+@@ -94,18 +82,19 @@ jobs:
+                   | cut -c1-40 \
+                   | sed 's/-$//')
+                 HASH=$(printf '%s' "$B" | sha1sum | cut -c1-6)
+-                echo "project-name-preview-${SAN}-${HASH}" >> /tmp/active.txt
++                echo "preview/${SAN}-${HASH}" >> /tmp/active.txt
+               done
+ 
+-      - name: Prune orphan preview D1s
++      - name: Prune orphan preview Neon branches
+         run: |
+           set -euo pipefail
+-          PREVIEW_DBS=$(pnpm --silent --filter @app/backend exec wrangler d1 list --json \
+-            | jq -r '.[] | select(.name | startswith("project-name-preview-")) | .name')
+-          for DB in $PREVIEW_DBS; do
+-            if grep -qx "$DB" /tmp/active.txt; then
+-              continue
+-            fi
+-            echo "Pruning orphan: $DB"
+-            pnpm --filter @app/backend exec wrangler d1 delete "$DB" --skip-confirmation || true
+-          done
++          API="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
++          curl -fsS -H "Authorization: Bearer $NEON_API_KEY" "$API" \
++            | jq -r '.branches[] | select(.name | startswith("preview/")) | "\(.id) \(.name)"' \
++            > /tmp/previews.txt
++          while read -r ID NAME; do
++            [ -z "$ID" ] && continue
++            grep -qxF "$NAME" /tmp/active.txt && continue
++            echo "Pruning orphan: $NAME ($ID)"
++            curl -fsS -X DELETE -H "Authorization: Bearer $NEON_API_KEY" "$API/$ID" -o /dev/null || true
++          done < /tmp/previews.txt

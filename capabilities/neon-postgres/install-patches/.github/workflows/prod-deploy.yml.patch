@@ -1,0 +1,57 @@
+diff --git a/.github/workflows/prod-deploy.yml b/.github/workflows/prod-deploy.yml
+index 4ac7951..f056174 100644
+--- a/.github/workflows/prod-deploy.yml
++++ b/.github/workflows/prod-deploy.yml
+@@ -47,35 +47,28 @@ jobs:
+       - name: Build
+         run: pnpm build
+ 
+-      # Production resolves its D1 by name, exactly like staging — but it must
+-      # NEVER find-or-create. Staging's create branch is a self-healing path; on
+-      # prod the same branch would silently deploy against a brand new empty
+-      # database. Missing DB = hard failure, on purpose. Do not "simplify" this
+-      # into a find-or-create.
+-      - name: Resolve production D1
+-        id: d1
+-        run: |
+-          set -euo pipefail
+-          DB_NAME=project-name-prod
+-          ID=$(pnpm --silent --filter @app/backend exec wrangler d1 list --json \
+-            | jq -r ".[] | select(.name == \"$DB_NAME\") | .uuid")
+-          if [ -z "$ID" ] || [ "$ID" = "null" ]; then
+-            echo "::error::Production D1 $DB_NAME not found. Create it once with 'wrangler d1 create $DB_NAME'. Production deploys never auto-create a database."
+-            exit 1
+-          fi
+-          echo "Resolved production D1: $DB_NAME ($ID)"
+-          echo "db_name=$DB_NAME" >> "$GITHUB_OUTPUT"
+-          echo "id=$ID" >> "$GITHUB_OUTPUT"
++      # Production is the Neon project's default branch. Unlike staging and
++      # previews it is never created here: a missing project is a hard failure,
++      # so a deploy can never land on a brand new empty database.
++      - name: Resolve production database
++        id: neon
++        uses: ./.github/actions/neon-env
++        with:
++          api-key: ${{ secrets.NEON_API_KEY }}
++          project-id: ${{ secrets.NEON_PROJECT_ID }}
++          default-branch: "true"
++
++      # Migrations run BEFORE the deploy, so new code never sees an older schema.
++      - name: Apply production migrations
++        env:
++          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
++        run: pnpm db:migrate
+ 
+       - name: Generate production wrangler config
+         env:
+           TARGET: production
+-          DB_NAME: ${{ steps.d1.outputs.db_name }}
+-          DB_ID: ${{ steps.d1.outputs.id }}
++          DB_CONNECTION_STRING: ${{ steps.neon.outputs.db_url }}
+         run: node scripts/gen-wrangler-config.mjs
+ 
+-      - name: Apply production migrations
+-        run: pnpm --filter @app/backend exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.production.json --remote
+-
+       - name: Deploy
+         run: pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json

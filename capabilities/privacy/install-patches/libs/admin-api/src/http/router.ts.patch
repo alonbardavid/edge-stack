@@ -1,0 +1,57 @@
+diff --git a/libs/admin-api/src/http/router.ts b/libs/admin-api/src/http/router.ts
+index 3edd5f2..783a29b 100644
+--- a/libs/admin-api/src/http/router.ts
++++ b/libs/admin-api/src/http/router.ts
+@@ -2,6 +2,13 @@ import type { Context } from "hono";
+ import { OpenAPIHandler } from "@orpc/openapi/fetch";
+ import { onError, ORPCError } from "@orpc/server";
+ import { createUser, listUsers, setUserPassword } from "../users/service";
++import {
++  deleteUser,
++  nukeUser,
++  restoreUser,
++  setUserTracking,
++  UserLifecycleError,
++} from "../users/lifecycle";
+ import type { AdminEnv } from "../types";
+ import { admin } from "./implementer";
+ import { moduleLogger } from "@lib/logging";
+@@ -36,8 +43,38 @@ const adminRouter = admin.router({
+     }
+     return { ok: true as const };
+   }),
++  setUserTracking: admin.setUserTracking.handler(({ input, context }) =>
++    lifecycle(() => setUserTracking(input.id, input.tracking, context.admin)),
++  ),
++  deleteUser: admin.deleteUser.handler(({ input, context }) =>
++    lifecycle(() => deleteUser(input.id, context.admin)),
++  ),
++  restoreUser: admin.restoreUser.handler(({ input, context }) =>
++    lifecycle(() => restoreUser(input.id, context.admin)),
++  ),
++  nukeUser: admin.nukeUser.handler(({ input, context }) =>
++    lifecycle(() => nukeUser(input.id, context.admin)),
++  ),
+ });
+ 
++// A lifecycle action either happens or says why not, as the error its
++// procedure declares; anything else is a bug for the error interceptor.
++async function lifecycle(action: () => Promise<void>) {
++  try {
++    await action();
++    return { ok: true as const };
++  } catch (error) {
++    if (error instanceof UserLifecycleError) {
++      log.warning("lifecycle action refused", {
++        code: error.code,
++        reason: error.message,
++      });
++      throw new ORPCError(error.code, { message: error.message });
++    }
++    throw error;
++  }
++}
++
+ const handler = new OpenAPIHandler(adminRouter, {
+   interceptors: [onError(logUnexpectedError)],
+ });

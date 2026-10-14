@@ -1,0 +1,30 @@
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+index 54e618f..7b8eb3a 100644
+--- a/eslint.config.mjs
++++ b/eslint.config.mjs
+@@ -13,6 +13,7 @@ export default defineConfig(
+       "**/node_modules/",
+       "**/.wrangler/",
+       "apps/backend/public/",
++      "apps/admin-backend/public/",
+     ],
+   },
+   eslint.configs.recommended,
+@@ -50,7 +51,7 @@ export default defineConfig(
+     },
+   },
+   {
+-    files: ["apps/backend/src/**/*.ts", "libs/*/src/**/*.ts"],
++    files: ["apps/*backend/src/**/*.ts", "libs/*/src/**/*.ts"],
+     plugins: { local: moduleLoggerName },
+     rules: {
+       "local/module-logger-name": "error",
+@@ -59,7 +60,7 @@ export default defineConfig(
+   {
+     // Server code logs through @lib/logging, which is the one place that
+     // configures LogTape and reaches the console.
+-    files: ["apps/backend/src/**/*.ts", "libs/*/src/**/*.ts"],
++    files: ["apps/*backend/src/**/*.ts", "libs/*/src/**/*.ts"],
+     ignores: [
+       "libs/logging/src/**",
+       "libs/server-commons/src/http-logger-middleware.ts",

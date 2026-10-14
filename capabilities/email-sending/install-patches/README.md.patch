@@ -1,0 +1,11 @@
+diff --git a/README.md b/README.md
+index 5750d71..becffb6 100644
+--- a/README.md
++++ b/README.md
+@@ -28,5 +28,6 @@ end-users from `/admin`.
+ - [Logging](libs/logging/README.md) — `moduleLogger`, request context, verbosity
+ - [Development](docs/development.md) — local dev, the build, local D1
+ - [Deployment](docs/deployment.md) — preview, staging and production
++- [Emails](docs/emails.md) — templates, sending, per-environment senders
+ - [Tests](tests/README.md) — e2e traps
+ - [Decisions](docs/adrs/) — architecture decision records

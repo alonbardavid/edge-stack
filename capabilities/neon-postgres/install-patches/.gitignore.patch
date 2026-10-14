@@ -1,0 +1,17 @@
+diff --git a/.gitignore b/.gitignore
+index 3e1b2e5..3893d65 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -15,11 +15,11 @@ dist
+ 
+ # Cloudflare
+ .wrangler
+-.wrangler-test
+ apps/backend/public
+ 
+ # Local dev databases
+ .db-cache
++.pgdata
+ 
+ # IDEs
+ .vscode

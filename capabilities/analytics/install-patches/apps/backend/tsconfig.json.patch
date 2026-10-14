@@ -1,0 +1,12 @@
+diff --git a/apps/backend/tsconfig.json b/apps/backend/tsconfig.json
+index c9e5b5e..5e9ca52 100644
+--- a/apps/backend/tsconfig.json
++++ b/apps/backend/tsconfig.json
+@@ -8,6 +8,7 @@
+   },
+   "references": [
+     { "path": "../../libs/admin-api" },
++    { "path": "../../libs/analytics-server" },
+     { "path": "../../libs/contract" },
+     { "path": "../../libs/db-models" },
+     { "path": "../../libs/identity" },

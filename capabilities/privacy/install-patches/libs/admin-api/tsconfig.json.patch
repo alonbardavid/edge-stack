@@ -1,0 +1,12 @@
+diff --git a/libs/admin-api/tsconfig.json b/libs/admin-api/tsconfig.json
+index 6bc51f5..1b96618 100644
+--- a/libs/admin-api/tsconfig.json
++++ b/libs/admin-api/tsconfig.json
+@@ -11,6 +11,7 @@
+   },
+   "references": [
+     { "path": "../admin-contract" },
++    { "path": "../analytics-server" },
+     { "path": "../db-models" },
+     { "path": "../logging" }
+   ],

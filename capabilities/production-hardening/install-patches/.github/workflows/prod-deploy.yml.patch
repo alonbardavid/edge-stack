@@ -1,0 +1,29 @@
+diff --git a/.github/workflows/prod-deploy.yml b/.github/workflows/prod-deploy.yml
+index 4ac7951..77c68ef 100644
+--- a/.github/workflows/prod-deploy.yml
++++ b/.github/workflows/prod-deploy.yml
+@@ -15,6 +15,9 @@ jobs:
+   deploy:
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
++    # Its secrets override the repo's same-named ones, which belong to the
++    # non-production accounts, and only main may deploy to it.
++    environment: production
+     env:
+       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+     steps:
+@@ -33,6 +36,7 @@ jobs:
+         with:
+           api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+           account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
++          refuse-worker: project-name-staging
+ 
+       - uses: pnpm/action-setup@v5
+ 
+@@ -79,3 +83,6 @@ jobs:
+ 
+       - name: Deploy
+         run: pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json
++
++      - name: Deploy admin
++        run: pnpm --filter @app/admin-backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json

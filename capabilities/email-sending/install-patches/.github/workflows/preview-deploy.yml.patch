@@ -1,0 +1,16 @@
+diff --git a/.github/workflows/preview-deploy.yml b/.github/workflows/preview-deploy.yml
+index 7613357..c0dacbe 100644
+--- a/.github/workflows/preview-deploy.yml
++++ b/.github/workflows/preview-deploy.yml
+@@ -115,6 +115,11 @@ jobs:
+           DB_NAME: ${{ steps.names.outputs.db_name }}
+           DB_ID: ${{ steps.d1.outputs.id }}
+           DEPLOY_ORIGIN: https://${{ steps.names.outputs.alias }}-project-name-staging.${{ steps.cf.outputs.subdomain }}.workers.dev
++          EMAIL_FROM: REPLACE_WITH_EMAIL_FROM
++          # Tags this preview's sender so its mail is distinguishable from every
++          # other preview's. The alias is lowercase/dash-only and capped at 47
++          # chars, keeping noreply+<alias> inside the 64-octet local-part limit.
++          EMAIL_TAG: ${{ steps.names.outputs.alias }}
+         run: |
+           echo "Preview canonical URL: $DEPLOY_ORIGIN"
+           node scripts/gen-wrangler-config.mjs

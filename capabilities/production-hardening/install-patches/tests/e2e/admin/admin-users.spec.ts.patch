@@ -1,0 +1,14 @@
+diff --git a/tests/e2e/admin/admin-users.spec.ts b/tests/e2e/admin/admin-users.spec.ts
+index 2e8f4a4..93e09c1 100644
+--- a/tests/e2e/admin/admin-users.spec.ts
++++ b/tests/e2e/admin/admin-users.spec.ts
+@@ -1,7 +1,7 @@
+ import { test, expect, type APIRequestContext } from "@playwright/test";
+-import { API, loginAsAdmin, signInToMainApp } from "./helpers";
++import { ADMIN_API, loginAsAdmin, signInToMainApp } from "./helpers";
+ 
+-const USERS = `${API}/api/admin/users`;
++const USERS = `${ADMIN_API}/api/admin/users`;
+ 
+ interface Page<Item> {
+   items: Item[];

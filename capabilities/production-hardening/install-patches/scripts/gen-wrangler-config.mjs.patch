@@ -1,0 +1,62 @@
+diff --git a/scripts/gen-wrangler-config.mjs b/scripts/gen-wrangler-config.mjs
+index 8fadf76..8f26743 100644
+--- a/scripts/gen-wrangler-config.mjs
++++ b/scripts/gen-wrangler-config.mjs
+@@ -6,6 +6,7 @@ import { environmentFor } from "./lib/environments.mjs";
+ 
+ const here = dirname(fileURLToPath(import.meta.url));
+ const backendDir = resolve(here, "../apps/backend");
++const adminBackendDir = resolve(here, "../apps/admin-backend");
+ const migrationsDir = resolve(here, "../migrations");
+ 
+ // Stamps per-target overrides onto the config emitted by `pnpm build` (run it
+@@ -24,13 +25,15 @@ const OVERRIDES = {
+ };
+ 
+ function main() {
+-  const source = emittedConfigPath();
++  const source = emittedConfigPath(backendDir);
+   const config = JSON.parse(readFileSync(source, "utf8"));
+   // Must sit beside the emitted config: its main/assets.directory are relative.
+   const out = resolve(dirname(source), OVERRIDES.outFile);
+ 
+   config.name = OVERRIDES.name;
+   delete config.env;
++  config.workers_dev = environment.workersDev;
++  config.preview_urls = environment.workersDev;
+   config.d1_databases = [
+     {
+       binding: "DB",
+@@ -55,11 +58,30 @@ function main() {
+   console.log(
+     `Wrote ${out} (target=${target}, name=${config.name}, db=${OVERRIDES.databaseName}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
+   );
++  writeAdminConfig(config);
++}
++
++// The admin worker shares the backend's database and nothing else: no auth
++// hosts, no canonical URL, no secrets.
++function writeAdminConfig(backendConfig) {
++  const source = emittedConfigPath(adminBackendDir);
++  const config = JSON.parse(readFileSync(source, "utf8"));
++  const out = resolve(dirname(source), OVERRIDES.outFile);
++
++  config.name = environment.adminWorkerName;
++  delete config.env;
++  config.workers_dev = environment.workersDev;
++  config.preview_urls = environment.workersDev;
++  config.d1_databases = backendConfig.d1_databases;
++  config.vars = { ...config.vars, NODE_ENV: "production" };
++
++  writeFileSync(out, JSON.stringify(config, null, 2) + "\n");
++  console.log(`Wrote ${out} (target=${target}, name=${config.name})`);
+ }
+ 
+ // `vite build` leaves this redirect to the emitted config (wrangler follows it too).
+-function emittedConfigPath() {
+-  const redirectFile = resolve(backendDir, ".wrangler/deploy/config.json");
++function emittedConfigPath(workerDir) {
++  const redirectFile = resolve(workerDir, ".wrangler/deploy/config.json");
+   let redirect;
+   try {
+     redirect = JSON.parse(readFileSync(redirectFile, "utf8"));

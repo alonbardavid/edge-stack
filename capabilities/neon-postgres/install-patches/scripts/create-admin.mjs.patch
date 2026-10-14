@@ -1,0 +1,104 @@
+diff --git a/scripts/create-admin.mjs b/scripts/create-admin.mjs
+index 99c6080..f5d7065 100644
+--- a/scripts/create-admin.mjs
++++ b/scripts/create-admin.mjs
+@@ -1,73 +1,40 @@
+ #!/usr/bin/env node
+-import { execFileSync } from "node:child_process";
+-import { fileURLToPath } from "node:url";
+-import { resolve, dirname } from "node:path";
+ import { parseArgs } from "node:util";
+-import { buildCreateAdminSql } from "./lib/build-admin-sql.mjs";
++import { buildCreateAdminStatement } from "./lib/build-admin-sql.mjs";
++import { resolveDatabaseUrl, describeTarget, withPgClient } from "./lib/pg.mjs";
+ 
+-const here = dirname(fileURLToPath(import.meta.url));
+-const backendDir = resolve(here, "../apps/backend");
++const USAGE = `Usage: pnpm admin:create --username <username> --password <password> [--database-url <url>]
+ 
+-const USAGE = `Usage: pnpm admin:create --username <username> --password <password> [--db-name <name>]
++Creates an admin user (app_admin table) in Postgres.
++  (default)              use $DATABASE_URL, or the local dev database
++  --database-url <url>   apply to a specific database (e.g. a Neon branch)`;
+ 
+-Creates an admin user (app_admin table) directly in D1.
+-  (default)         apply to the local dev DB
+-  --db-name <name>  apply to a named remote D1 database (e.g. project-name-prod, project-name-staging)`;
+-
+-function main() {
+-  let parsed;
+-  try {
+-    parsed = parseArgs({
+-      options: {
+-        username: { type: "string" },
+-        password: { type: "string" },
+-        "db-name": { type: "string" },
+-        help: { type: "boolean", default: false },
+-      },
+-    });
+-  } catch (err) {
+-    console.error(err.message);
+-    console.error(USAGE);
+-    process.exit(1);
+-  }
++async function main() {
++  const parsed = parseArgs({
++    options: {
++      username: { type: "string" },
++      password: { type: "string" },
++      "database-url": { type: "string" },
++      help: { type: "boolean", default: false },
++    },
++  });
+ 
+   const { username, password, help } = parsed.values;
+-  const dbName = parsed.values["db-name"];
+   if (help || !username || !password) {
+     console.log(USAGE);
+     process.exit(help ? 0 : 1);
+   }
+ 
+-  const database = dbName ?? "DB";
+-  const describeTarget = dbName ? `remote "${dbName}"` : "local";
+-
+-  buildCreateAdminSql({ username, password })
+-    .then((sql) => {
+-      const wranglerArgs = [
+-        "exec",
+-        "wrangler",
+-        "d1",
+-        "execute",
+-        database,
+-        "--command",
+-        sql,
+-      ];
+-      if (dbName) {
+-        wranglerArgs.push("--remote");
+-      } else {
+-        wranglerArgs.push("--local");
+-      }
+-
+-      console.log(
+-        `Creating admin ${username} in the ${describeTarget} database…`,
+-      );
+-      execFileSync("pnpm", wranglerArgs, { cwd: backendDir, stdio: "inherit" });
+-      console.log("Done. The admin can sign in at /admin.");
+-    })
+-    .catch((err) => {
+-      console.error("Failed to create admin:", err.message);
+-      process.exit(1);
+-    });
++  const url = resolveDatabaseUrl(parsed.values["database-url"]);
++  const statement = await buildCreateAdminStatement({ username, password });
++  console.log(`Creating admin ${username} in ${describeTarget(url)}…`);
++  await withPgClient(url, (client) =>
++    client.query(statement.text, statement.values),
++  );
++  console.log("Done. The admin can sign in at /admin.");
+ }
+ 
+-main();
++main().catch((err) => {
++  console.error("Failed to create admin:", err.message);
++  process.exit(1);
++});

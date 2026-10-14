@@ -1,0 +1,56 @@
+diff --git a/scripts/gen-wrangler-config.mjs b/scripts/gen-wrangler-config.mjs
+index f0a2f18..a4c33a9 100644
+--- a/scripts/gen-wrangler-config.mjs
++++ b/scripts/gen-wrangler-config.mjs
+@@ -9,13 +9,15 @@ const backendDir = resolve(here, "../apps/backend");
+ const adminBackendDir = resolve(here, "../apps/admin-backend");
+ 
+ // Stamps per-target overrides onto the config emitted by `pnpm build` (run it
+-// first). DB_CONNECTION_STRING is the target's Neon branch, resolved by the
+-// deploy workflow at deploy time.
++// first). DB_CONNECTION_STRING is the target's Neon branch as the app role,
++// resolved by the deploy workflow at deploy time; HYPERDRIVE_ID, when set,
++// binds production's Hyperdrive in front of it.
+ const target = requireEnv("TARGET");
+ const environment = environmentFor(target);
+ const OVERRIDES = {
+   name: environment.workerName,
+   databaseUrl: requireEnv("DB_CONNECTION_STRING"),
++  hyperdriveId: process.env.HYPERDRIVE_ID,
+   frontendCanonicalBaseUrl:
+     environment.canonicalBaseUrl ?? requireEnv("DEPLOY_ORIGIN"),
+   authAllowedHosts: environment.allowedHosts.join(","),
+@@ -32,6 +34,9 @@ function main() {
+   delete config.env;
+   config.workers_dev = environment.workersDev;
+   config.preview_urls = environment.workersDev;
++  if (OVERRIDES.hyperdriveId) {
++    config.hyperdrive = [{ binding: "HYPERDRIVE", id: OVERRIDES.hyperdriveId }];
++  }
+   config.vars = {
+     ...config.vars,
+     DB_CONNECTION_STRING: OVERRIDES.databaseUrl,
+@@ -46,7 +51,7 @@ function main() {
+ 
+   writeFileSync(out, JSON.stringify(config, null, 2) + "\n");
+   console.log(
+-    `Wrote ${out} (target=${target}, name=${config.name}, db=${new URL(OVERRIDES.databaseUrl).host}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
++    `Wrote ${out} (target=${target}, name=${config.name}, db=${new URL(OVERRIDES.databaseUrl).host}, hyperdrive=${OVERRIDES.hyperdriveId ?? "none"}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
+   );
+   writeAdminConfig(config);
+ }
+@@ -62,8 +67,12 @@ function writeAdminConfig(backendConfig) {
+   delete config.env;
+   config.workers_dev = environment.workersDev;
+   config.preview_urls = environment.workersDev;
+-  config.d1_databases = backendConfig.d1_databases;
+-  config.vars = { ...config.vars, NODE_ENV: "production" };
++  config.hyperdrive = backendConfig.hyperdrive;
++  config.vars = {
++    ...config.vars,
++    DB_CONNECTION_STRING: backendConfig.vars.DB_CONNECTION_STRING,
++    NODE_ENV: "production",
++  };
+ 
+   writeFileSync(out, JSON.stringify(config, null, 2) + "\n");
+   console.log(`Wrote ${out} (target=${target}, name=${config.name})`);

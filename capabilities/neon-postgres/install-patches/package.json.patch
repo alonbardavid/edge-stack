@@ -1,0 +1,46 @@
+diff --git a/package.json b/package.json
+index f46d20d..7b61f53 100644
+--- a/package.json
++++ b/package.json
+@@ -10,7 +10,7 @@
+   },
+   "scripts": {
+     "build": "turbo run build",
+-    "predev": "pnpm build",
++    "predev": "pnpm db:start && pnpm build",
+     "pretest": "pnpm build",
+     "dev": "concurrently --names \"backend,frontend,admin\" --prefix-colors \"blue,magenta,cyan\" --kill-others --raw \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:admin\"",
+     "dev:ci": "concurrently --names \"backend,frontend,admin\" --kill-others --raw \"pnpm run dev:ci:backend\" \"pnpm run dev:ci:frontend\" \"pnpm run dev:ci:admin\"",
+@@ -22,10 +22,11 @@
+     "dev:ci:admin": "pnpm --filter @app/admin-frontend dev:vite",
+     "test": "pnpm --filter tests test",
+     "admin:create": "turbo run build --filter=@lib/db-models --output-logs=errors-only && node scripts/create-admin.mjs",
++    "db:start": "node scripts/local-db.mjs start",
++    "db:stop": "node scripts/local-db.mjs stop",
+     "db:new": "node scripts/new-migration.mjs",
+-    "db:migrate": "pnpm --filter @app/backend exec wrangler d1 migrations apply DB",
+-    "gen:prod-config": "TARGET=production DB_NAME=project-name-prod DB_ID=$(pnpm --silent --filter @app/backend exec wrangler d1 info project-name-prod --json | jq -r .uuid) node scripts/gen-wrangler-config.mjs",
+-    "db:migrate:remote": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.production.json --remote",
++    "db:migrate": "node scripts/migrate.mjs",
++    "gen:prod-config": "TARGET=production DB_CONNECTION_STRING=${DB_CONNECTION_STRING:?set DB_CONNECTION_STRING to the production Neon branch URL} node scripts/gen-wrangler-config.mjs",
+     "deploy": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json",
+     "type-check": "turbo run type-check",
+     "clean": "turbo run clean && rm -rf node_modules",
+@@ -40,14 +41,17 @@
+     "better-auth": "^1.2.0",
+     "better-sqlite3": "^12.6.2",
+     "concurrently": "^8.2.2",
++    "embedded-postgres": "17.10.0-beta.17",
+     "eslint": "^10.2.0",
+     "eslint-config-prettier": "^10.1.8",
+     "husky": "^9.1.7",
+     "lint-staged": "^16.4.0",
++    "pg": "^8.23.0",
+     "prettier": "^3.8.1",
+     "turbo": "^2.0.0",
+     "typescript": "^5.3.3",
+     "typescript-eslint": "^8.58.1",
++    "umzug": "^3.8.3",
+     "wait-on": "^7.2.0"
+   },
+   "lint-staged": {

@@ -1,0 +1,10 @@
+diff --git a/libs/contract/src/index.ts b/libs/contract/src/index.ts
+index 11b3daa..22cb346 100644
+--- a/libs/contract/src/index.ts
++++ b/libs/contract/src/index.ts
+@@ -20,3 +20,5 @@ export const contract = {
+ export type Contract = typeof contract;
+ 
+ export type ApiClient = ContractRouterClient<Contract>;
++
++export { POSTHOG_HOST, POSTHOG_PROJECT_TOKEN } from "./analytics";

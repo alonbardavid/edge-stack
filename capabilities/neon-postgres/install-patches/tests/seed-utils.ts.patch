@@ -1,0 +1,74 @@
+diff --git a/tests/seed-utils.ts b/tests/seed-utils.ts
+index 66c8317..d38916c 100644
+--- a/tests/seed-utils.ts
++++ b/tests/seed-utils.ts
+@@ -12,44 +12,45 @@ export interface CreateAdminInput {
+   password: string;
+ }
+ 
+-export async function buildCreateAdminSql({
++export interface SqlStatement {
++  text: string;
++  values: unknown[];
++}
++
++export async function buildCreateAdminStatements({
+   username,
+   password,
+-}: CreateAdminInput): Promise<string> {
++}: CreateAdminInput): Promise<SqlStatement[]> {
+   if (!username || !password) {
+     throw new Error("username and password are both required");
+   }
+-  const adminId = newEntityId("ADMIN");
+   const hash = await hashPassword(password);
+-  return (
+-    `INSERT INTO app_admin (id, username, password) VALUES ` +
+-    `(${sqlString(adminId)}, ${sqlString(username)}, ${sqlString(hash)});`
+-  );
++  return [
++    {
++      text: "INSERT INTO app_admin (id, username, password) VALUES ($1, $2, $3)",
++      values: [newEntityId("ADMIN"), username, hash],
++    },
++  ];
+ }
+ 
+-export async function buildCreateUserSql({
++export async function buildCreateUserStatements({
+   email,
+   password,
+   name,
+-}: CreateUserInput): Promise<string> {
++}: CreateUserInput): Promise<SqlStatement[]> {
+   if (!email || !password || !name) {
+     throw new Error("email, password and name are all required");
+   }
+   const userId = newEntityId("USER");
+-  const accountId = newEntityId("USER_ACCOUNT");
+   const hash = await hashPassword(password);
+-
+-  const userInsert =
+-    `INSERT INTO user (id, name, email, email_verified) VALUES ` +
+-    `(${sqlString(userId)}, ${sqlString(name)}, ${sqlString(email)}, 1);`;
+-
+-  const accountInsert =
+-    `INSERT INTO user_accounts (id, account_id, provider_id, user_id, password) VALUES ` +
+-    `(${sqlString(accountId)}, ${sqlString(userId)}, 'credential', ${sqlString(userId)}, ${sqlString(hash)});`;
+-
+-  return `${userInsert}\n${accountInsert}`;
+-}
+-
+-function sqlString(value: string): string {
+-  return `'${value.replace(/'/g, "''")}'`;
++  return [
++    {
++      text: 'INSERT INTO "user" (id, name, email, email_verified) VALUES ($1, $2, $3, true)',
++      values: [userId, name, email],
++    },
++    {
++      text: "INSERT INTO user_accounts (id, account_id, provider_id, user_id, password) VALUES ($1, $2, 'credential', $3, $4)",
++      values: [newEntityId("USER_ACCOUNT"), userId, userId, hash],
++    },
++  ];
+ }

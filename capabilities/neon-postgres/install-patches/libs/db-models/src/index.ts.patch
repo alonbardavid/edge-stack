@@ -1,0 +1,21 @@
+diff --git a/libs/db-models/src/index.ts b/libs/db-models/src/index.ts
+index 5026ded..058f00b 100644
+--- a/libs/db-models/src/index.ts
++++ b/libs/db-models/src/index.ts
+@@ -7,7 +7,15 @@ export {
+ } from "./schemas/auth";
+ export { appAdmin, appAdminSession } from "./schemas/admin";
+ export { ENTITY_PREFIXES, newEntityId, type Entity } from "./entity-ids";
+-export { getDb, checkHealth, type Db } from "./db";
++export {
++  getDb,
++  stableDbRef,
++  withDb,
++  withTransaction,
++  checkHealth,
++  type Db,
++  type DbEnv,
++} from "./db";
+ export {
+   paginate,
+   matchesAllTerms,

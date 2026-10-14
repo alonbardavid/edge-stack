@@ -1,0 +1,14 @@
+diff --git a/docs/deployment.md b/docs/deployment.md
+index 2cfe426..c856c6b 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -11,7 +11,8 @@ previews share another ([production.md](production.md)).
+ | **preview**    | both staging Workers, per-branch alias               | `preview/<branch>-<hash>`, off it   | push to any other branch (`preview-deploy.yml`) |
+ 
+ Every workflow migrates its Neon branch **before** it deploys, so new code never runs against
+-an older schema. `e2e.yml` runs Playwright on every PR and on `main`, against the same local
++an older schema, then ensures the restricted role the Workers connect as
++([database.md](database.md#neon)). `e2e.yml` runs Playwright on every PR and on `main`, against the same local
+ Postgres as dev. See [database.md](database.md) for the Neon layout.
+ 
+ ## Generated deploy configs

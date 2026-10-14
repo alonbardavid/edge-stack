@@ -1,0 +1,7 @@
+{
+  "name": "privacy",
+  "version": "0.1.0",
+  "deliveredAs": "add-on",
+  "requires": ["analytics"],
+  "description": "Privacy for a project that tracks with the analytics capability: regional tracking consent (an opt-in banner for EU visitors, a tracking setting per account — enabled / server-only / disabled — set by the user or an admin, a Do Not Sell page for California, Global Privacy Control honoured, the Worker dropping every event of an opted-out user), a minimal privacy policy page linked from every screen, and the account lifecycle in the admin app: delete (locks the user out), restore, and nuke (the erasure request: personal data scrambled, credentials deleted, the PostHog person erased, never undone). Requires analytics; installed on demand by add-edge-capability."
+}

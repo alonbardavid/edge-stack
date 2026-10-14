@@ -1,0 +1,21 @@
+diff --git a/apps/admin-backend/src/index.ts b/apps/admin-backend/src/index.ts
+index 47ba898..dd9b975 100644
+--- a/apps/admin-backend/src/index.ts
++++ b/apps/admin-backend/src/index.ts
+@@ -1,6 +1,6 @@
+ import { Hono } from "hono";
+ import { adminApp } from "@lib/admin-api";
+-import { errorHandler, httpLogger } from "@lib/server-commons";
++import { errorHandler, httpLogger, dbMiddleware } from "@lib/server-commons";
+ 
+ const app = new Hono();
+ 
+@@ -9,6 +9,8 @@ app.onError(errorHandler);
+ // First, so every line written while serving a request carries its context.
+ app.use("*", httpLogger);
+ 
++app.use("/api/*", dbMiddleware);
++
+ app.get("/", (c) => c.redirect("/admin/"));
+ 
+ app.route("/", adminApp);

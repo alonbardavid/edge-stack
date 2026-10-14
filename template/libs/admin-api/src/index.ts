@@ -1,0 +1,1 @@
+export { adminApp } from "./app";

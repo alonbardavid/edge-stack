@@ -1,0 +1,18 @@
+diff --git a/apps/frontend/src/components/layouts/UnauthenticatedLayout.tsx b/apps/frontend/src/components/layouts/UnauthenticatedLayout.tsx
+index 8329cfb..e4fff5c 100644
+--- a/apps/frontend/src/components/layouts/UnauthenticatedLayout.tsx
++++ b/apps/frontend/src/components/layouts/UnauthenticatedLayout.tsx
+@@ -1,4 +1,5 @@
+ import { Outlet } from "react-router-dom";
++import { PrivacyFooter } from "../PrivacyFooter";
+ 
+ export const UnauthenticatedLayout = () => {
+   return (
+@@ -6,6 +7,7 @@ export const UnauthenticatedLayout = () => {
+       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+     >
+       <Outlet />
++      <PrivacyFooter />
+     </main>
+   );
+ };

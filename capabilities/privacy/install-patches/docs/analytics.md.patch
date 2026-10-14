@@ -1,0 +1,25 @@
+diff --git a/docs/analytics.md b/docs/analytics.md
+index 93367ce..8be1e50 100644
+--- a/docs/analytics.md
++++ b/docs/analytics.md
+@@ -17,6 +17,7 @@ a frontend mutation hook — the server already reports the change.
+ | `$pageview`, `$pageleave` | browser | the SDK, on every route change                                         |
+ | `$identify` (email, name) | browser | `AnalyticsTracker`, while someone is signed in                         |
+ | `signed_out`              | browser | `useLogout`, which then resets the SDK's id                            |
++| `consent_answered`        | browser | `usePrivacyChoice`, when a visitor allows tracking                     |
+ | `signed_up` (+ identify)  | Worker  | better-auth's user-create hook, `libs/identity/src/analytics-hooks.ts` |
+ | `signed_in`               | Worker  | better-auth's session-create hook, same file                           |
+ 
+@@ -47,6 +48,12 @@ dropped — which covers the keys the SDK adds on its own (`$session_entry_url`,
+ characters with a digit, so name static route segments with words only. Autocapture and
+ session recording are off: every event is one somebody chose to send.
+ 
++## Consent
++
++The browser SDK starts opted out and storing nothing, and captures only once the visitor's
++tracking setting is `enabled`; the Worker drops every event of a user whose setting is
++`disabled`. Who decides what, per region, is in [privacy](privacy.md#tracking-consent).
++
+ ## Delivery per environment
+ 
+ Only production delivers. Staging, previews, local dev and e2e log every event instead:

@@ -1,0 +1,29 @@
+diff --git a/apps/frontend/vite.config.ts b/apps/frontend/vite.config.ts
+index 2453ef8..b9458e2 100644
+--- a/apps/frontend/vite.config.ts
++++ b/apps/frontend/vite.config.ts
+@@ -1,5 +1,15 @@
+ import { defineConfig, type PluginOption } from "vite";
+ import react from "@vitejs/plugin-react";
++import { PRODUCT_DISPLAY_NAME } from "@lib/contract/constants";
++
++// The app title is filled at BUILD time (works in dev serve too) — no runtime
++// document.title assignment.
++const productNameHtml: PluginOption = {
++  name: "html-product-name",
++  transformIndexHtml(html) {
++    return html.replace(/%PRODUCT_NAME%/g, PRODUCT_DISPLAY_NAME);
++  },
++};
+ 
+ const adminTrailingSlashRedirect: PluginOption = {
+   name: "admin-trailing-slash-redirect",
+@@ -16,7 +26,7 @@ const adminTrailingSlashRedirect: PluginOption = {
+ };
+ 
+ export default defineConfig({
+-  plugins: [react(), adminTrailingSlashRedirect],
++  plugins: [react(), productNameHtml, adminTrailingSlashRedirect],
+   build: {
+     outDir: "dist/public",
+     emptyOutDir: true,

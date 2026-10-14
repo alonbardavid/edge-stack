@@ -1,0 +1,12 @@
+diff --git a/libs/server-commons/package.json b/libs/server-commons/package.json
+index 726ab8c..842f7c0 100644
+--- a/libs/server-commons/package.json
++++ b/libs/server-commons/package.json
+@@ -17,6 +17,7 @@
+     "clean": "rm -rf dist *.tsbuildinfo"
+   },
+   "dependencies": {
++    "@lib/db-models": "workspace:*",
+     "@lib/logging": "workspace:*",
+     "@logtape/hono": "2.3.7",
+     "hono": "^4.0.0"

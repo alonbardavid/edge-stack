@@ -1,0 +1,19 @@
+diff --git a/apps/backend/vite.config.ts b/apps/backend/vite.config.ts
+index 1f374df..92f543f 100644
+--- a/apps/backend/vite.config.ts
++++ b/apps/backend/vite.config.ts
+@@ -12,6 +12,14 @@ export default defineConfig({
+       persistState: persistTo ? { path: persistTo } : true,
+     }),
+   ],
++  resolve: {
++    alias: {
++      // @react-email/render's workerd build imports react-dom/server.edge,
++      // which react-dom 18 does not export; rollup fails the build without
++      // this alias. server.browser is the same Web-Streams build. Drop on React 19.
++      "react-dom/server.edge": "react-dom/server.browser",
++    },
++  },
+   server: {
+     // Both frontend dev servers proxy /api to this port.
+     port: 8301,

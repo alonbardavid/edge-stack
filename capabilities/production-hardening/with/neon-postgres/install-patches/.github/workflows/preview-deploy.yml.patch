@@ -1,0 +1,32 @@
+diff --git a/.github/workflows/preview-deploy.yml b/.github/workflows/preview-deploy.yml
+index a4e7dd0..b125ebe 100644
+--- a/.github/workflows/preview-deploy.yml
++++ b/.github/workflows/preview-deploy.yml
+@@ -80,6 +80,8 @@ jobs:
+         with:
+           api-key: ${{ secrets.NEON_API_KEY }}
+           project-id: ${{ secrets.NEON_PROJECT_ID }}
++          project-name: project-name-staging
++          refuse-project: project-name
+           branch: ${{ steps.names.outputs.neon_branch }}
+           create: "true"
+           parent-branch: staging
+@@ -89,10 +91,17 @@ jobs:
+           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+         run: pnpm db:migrate
+ 
++      - name: Ensure the app role
++        id: app-db
++        env:
++          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
++          APP_ROLE_PASSWORD: ${{ secrets.DB_APP_PASSWORD }}
++        run: node scripts/ensure-app-role.mjs
++
+       - name: Generate preview wrangler config
+         env:
+           TARGET: preview
+-          DB_CONNECTION_STRING: ${{ steps.neon.outputs.db_url }}
++          DB_CONNECTION_STRING: ${{ steps.app-db.outputs.db_url }}
+           DEPLOY_ORIGIN: https://${{ steps.names.outputs.alias }}-project-name-staging.${{ steps.cf.outputs.subdomain }}.workers.dev
+         run: |
+           echo "Preview canonical URL: $DEPLOY_ORIGIN"

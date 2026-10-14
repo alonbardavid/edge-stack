@@ -1,0 +1,63 @@
+# Restores the "!" that makes an R2-hosted image render inline in a pull request
+# body or comment.
+#
+# Bodies sent to api.github.com from a Claude Code cloud session have their image
+# markdown rewritten before GitHub stores it — "![alt](url)" arrives as
+# "[alt](url)" (https://github.com/anthropics/claude-code/issues/89540) — so
+# screenshots uploaded by scripts/pr-media/upload.mjs show up as bare links. A
+# workflow's GITHUB_TOKEN writes from GitHub's own runners, outside that path, so
+# it can put the "!" back. Delete this file once that issue is fixed.
+#
+# Safe to re-run: an already-prefixed line no longer matches, and edits made with
+# GITHUB_TOKEN do not trigger another workflow run.
+#
+# pull_request (not pull_request_target) is deliberate: it runs with a read-only
+# token on forks, and only a branch in this repo can carry links from our R2
+# bucket in the first place — a fork PR simply has nothing to match.
+
+name: Restore image embeds
+
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  restore:
+    if: github.event_name == 'pull_request' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const isComment = context.eventName === 'issue_comment';
+            const body =
+              (isComment
+                ? context.payload.comment.body
+                : context.payload.pull_request.body) ?? "";
+            // A whole line that is nothing but a link to an R2-hosted image.
+            const restored = body.replace(
+              /^\[([^\]]*)\]\((https:\/\/pub-[^\/\s]+\.r2\.dev\/[^\s)]+\.(?:png|jpe?g|gif|webp))\)(?=\r?$)/gim,
+              "![$1]($2)",
+            );
+            if (restored === body) {
+              return;
+            }
+            if (isComment) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: context.payload.comment.id,
+                body: restored,
+              });
+            } else {
+              await github.rest.pulls.update({
+                ...context.repo,
+                pull_number: context.payload.pull_request.number,
+                body: restored,
+              });
+            }

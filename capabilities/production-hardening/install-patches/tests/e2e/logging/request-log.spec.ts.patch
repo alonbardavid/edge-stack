@@ -1,0 +1,34 @@
+diff --git a/tests/e2e/logging/request-log.spec.ts b/tests/e2e/logging/request-log.spec.ts
+index 2515e99..1a83580 100644
+--- a/tests/e2e/logging/request-log.spec.ts
++++ b/tests/e2e/logging/request-log.spec.ts
+@@ -1,9 +1,9 @@
+ import { expect, test } from "@playwright/test";
+ import { readFile } from "node:fs/promises";
+ import { resolve } from "node:path";
+-import { API, loginAsAdmin } from "../admin/helpers";
++import { ADMIN_API, loginAsAdmin } from "../admin/helpers";
+ 
+-const WORKER_LOG = resolve(import.meta.dirname, "../../.logs/worker.log");
++const WORKER_LOG = resolve(import.meta.dirname, "../../.logs/admin-worker.log");
+ 
+ // The rest of the suite asserts behaviour, so it stays green when a request
+ // silently stops carrying its id, route or caller in the log.
+@@ -13,7 +13,7 @@ test.describe("Request logs", () => {
+   }) => {
+     await loginAsAdmin(request);
+ 
+-    const created = await request.post(`${API}/api/admin/users`, {
++    const created = await request.post(`${ADMIN_API}/api/admin/users`, {
+       data: {
+         email: `log_${Date.now()}@example.com`,
+         name: "Log Spec",
+@@ -79,7 +79,7 @@ async function readLog(): Promise<string[]> {
+     return (await readFile(WORKER_LOG, "utf8")).split("\n");
+   } catch {
+     throw new Error(
+-      `${WORKER_LOG} is missing. The backend dev server started by this suite ` +
++      `${WORKER_LOG} is missing. The admin worker dev server started by this suite ` +
+         `writes it; a server already running is reused and does not, so stop it first.`,
+     );
+   }

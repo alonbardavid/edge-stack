@@ -1,0 +1,9 @@
+diff --git a/apps/frontend/src/vite-env.d.ts b/apps/frontend/src/vite-env.d.ts
+index 11f02fe..5dac188 100644
+--- a/apps/frontend/src/vite-env.d.ts
++++ b/apps/frontend/src/vite-env.d.ts
+@@ -1 +1,4 @@
+ /// <reference types="vite/client" />
++
++/** Whether events reach PostHog; set by apps/frontend/vite.config.ts. */
++declare const __ANALYTICS_DELIVER__: boolean;

@@ -1,0 +1,33 @@
+diff --git a/apps/frontend/src/screens/home/HomeScreen.tsx b/apps/frontend/src/screens/home/HomeScreen.tsx
+index 415313e..d9feff2 100644
+--- a/apps/frontend/src/screens/home/HomeScreen.tsx
++++ b/apps/frontend/src/screens/home/HomeScreen.tsx
+@@ -1,6 +1,7 @@
+ import { AppShell, Button, Group, Stack, Text, Title } from "@mantine/core";
+ import { useMe } from "../../logic/authentication/useMe";
+ import { useLogout } from "../../logic/authentication/useLogout";
++import { PrivacyFooter } from "../../components/PrivacyFooter";
+ 
+ export const HomeScreen = () => {
+   const { name, email } = useMe();
+@@ -16,12 +17,19 @@ export const HomeScreen = () => {
+           </Button>
+         </Group>
+       </AppShell.Header>
+-      <AppShell.Main>
++      <AppShell.Main style={main}>
+         <Stack align="center" justify="center" mt="xl" gap="xs">
+           <Title order={2}>Welcome, {name}</Title>
+           {email && <Text c="dimmed">{email}</Text>}
+         </Stack>
++        <PrivacyFooter />
+       </AppShell.Main>
+     </AppShell>
+   );
+ };
++
++const main = {
++  display: "flex",
++  flexDirection: "column" as const,
++  minHeight: "100dvh",
++};

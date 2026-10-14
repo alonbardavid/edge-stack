@@ -1,0 +1,22 @@
+diff --git a/apps/backend/src/index.ts b/apps/backend/src/index.ts
+index ff2bf06..c06727c 100644
+--- a/apps/backend/src/index.ts
++++ b/apps/backend/src/index.ts
+@@ -3,7 +3,7 @@ import { OpenAPIHandler } from "@orpc/openapi/fetch";
+ import { ORPCError, onError } from "@orpc/server";
+ import { RequestHeadersPlugin } from "@orpc/server/plugins";
+ import { adminApp } from "@lib/admin-api";
+-import { errorHandler, httpLogger } from "@lib/server-commons";
++import { errorHandler, httpLogger, dbMiddleware } from "@lib/server-commons";
+ import { moduleLogger } from "@lib/logging";
+ import { getAuth } from "@lib/identity";
+ import { api } from "./routes/api";
+@@ -24,6 +24,8 @@ app.onError(errorHandler);
+ // First, so every line written while serving a request carries its context.
+ app.use("*", httpLogger);
+ 
++app.use("/api/*", dbMiddleware);
++
+ app.on(["POST", "GET"], "/api/auth/*", (c) => getAuth().handler(c.req.raw));
+ 
+ app.get("/api/health", health);

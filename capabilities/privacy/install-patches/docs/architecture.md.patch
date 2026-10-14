@@ -1,0 +1,24 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 6eddce9..e6c7aa6 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -45,6 +45,9 @@ better-auth (email + password) in `@lib/identity` (`getAuth()`), mounted on `/ap
+ using its Drizzle adapter over D1 with the `user` / `user_sessions` / `user_accounts` /
+ `user_verifications` tables. Sessions are httpOnly cookies; there is no client token.
+ 
++A deleted user keeps its row; a `before` hook refuses its sign-in
++([privacy](privacy.md)).
++
+ There is no self-service sign-up (`emailAndPassword.disableSignUp`). End-users are created
+ from the admin app, which inserts a verified `user` plus a credential `user_accounts` row via
+ `createUser` / `setUserPassword`. `user_verifications` exists only because better-auth's
+@@ -63,7 +66,8 @@ change their own password from the app; only `pnpm admin:create` manages admins.
+ 
+ `@lib/admin-api` exports one Hono app, `adminApp`: public `POST /api/admin/auth/login`, then
+ the `requireAdmin` gate, then logout, the `@lib/admin-contract` oRPC handler (me, list /
+-create users, set a user's password) and the admin SPA's assets.
++create users, set a user's password or tracking, delete / restore / nuke a user) and the
++admin SPA's assets.
+ 
+ ```bash
+ pnpm admin:create --username <u> --password <p>                          # local D1

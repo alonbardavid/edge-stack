@@ -1,0 +1,15 @@
+diff --git a/.github/workflows/e2e.yml b/.github/workflows/e2e.yml
+index 09c8a63..2c8d77a 100644
+--- a/.github/workflows/e2e.yml
++++ b/.github/workflows/e2e.yml
+@@ -78,6 +78,10 @@ jobs:
+       - name: Build packages
+         run: pnpm build
+ 
++      # playwright.config.ts would start it too; here a failure shows its log in its own step.
++      - name: Start local Postgres
++        run: pnpm db:start || { cat .pgdata/local-db.log; exit 1; }
++
+       - name: Run E2E tests
+         run: pnpm test
+ 

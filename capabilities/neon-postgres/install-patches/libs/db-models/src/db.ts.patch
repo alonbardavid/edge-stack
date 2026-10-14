@@ -1,0 +1,86 @@
+diff --git a/libs/db-models/src/db.ts b/libs/db-models/src/db.ts
+index 6611430..9bd6fa5 100644
+--- a/libs/db-models/src/db.ts
++++ b/libs/db-models/src/db.ts
+@@ -1,22 +1,61 @@
+-import { env } from "cloudflare:workers";
+-import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
++import { AsyncLocalStorage } from "node:async_hooks";
+ import { sql } from "drizzle-orm";
+-import { moduleLogger, queryLogger } from "@lib/logging";
++import { moduleLogger } from "@lib/logging";
++import { createDbClient, type Db, type DbEnv } from "./client";
+ 
+ const log = moduleLogger("db-models/db");
+ 
+-export type Db = DrizzleD1Database;
++const requestDb = new AsyncLocalStorage<Db>();
+ 
++export type { Db, DbEnv };
++
++// Workers forbid reusing a connection across requests, so every request (or
++// cron/queue invocation) opens its own pool here and closes it when done.
++export async function withDb<T>(
++  env: DbEnv,
++  run: () => Promise<T>,
++  waitUntil?: (work: Promise<unknown>) => void,
++): Promise<T> {
++  const { db, close } = await createDbClient(env);
++  try {
++    return await requestDb.run(db, run);
++  } finally {
++    const closed = close().catch((err) => {
++      log.error("failed to close the database client", { err });
++    });
++    waitUntil?.(closed);
++  }
++}
++
++// Never store the result: a stored handle keeps pointing at the client it
++// resolved on, so it would silently run outside a later withTransaction().
+ export function getDb(): Db {
+-  return drizzle(env.DB, { logger: queryLogger() });
++  return currentDb();
+ }
+ 
++// Every getDb() call inside `run` joins the transaction.
++export async function withTransaction<T>(run: () => Promise<T>): Promise<T> {
++  return currentDb().transaction((tx) =>
++    requestDb.run(tx as unknown as Db, run),
++  );
++}
++
++// Only for libraries that capture a db once and keep it (better-auth's
++// drizzleAdapter): resolves the current request's client on every access.
++export const stableDbRef: Db = new Proxy({} as Db, {
++  get(_target, property) {
++    const db = currentDb();
++    const value = Reflect.get(db as object, property) as unknown;
++    return typeof value === "function" ? value.bind(db) : value;
++  },
++});
++
+ export async function checkHealth(): Promise<{
+   status: string;
+   error?: string;
+ }> {
+   try {
+-    await getDb().run(sql`SELECT 1`);
++    await getDb().execute(sql`SELECT 1`);
+     return { status: "ok" };
+   } catch (err) {
+     const message = err instanceof Error ? err.message : "Unknown error";
+@@ -24,3 +63,13 @@ export async function checkHealth(): Promise<{
+     return { status: "error", error: message };
+   }
+ }
++
++function currentDb(): Db {
++  const db = requestDb.getStore();
++  if (!db) {
++    throw new Error(
++      "getDb() was called outside of a withDb() scope: wrap the entrypoint in withDb()",
++    );
++  }
++  return db;
++}

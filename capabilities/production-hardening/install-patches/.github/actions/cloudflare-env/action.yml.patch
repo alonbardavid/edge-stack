@@ -1,0 +1,44 @@
+diff --git a/.github/actions/cloudflare-env/action.yml b/.github/actions/cloudflare-env/action.yml
+index c95d0f6..22244f6 100644
+--- a/.github/actions/cloudflare-env/action.yml
++++ b/.github/actions/cloudflare-env/action.yml
+@@ -20,6 +20,13 @@ inputs:
+     description: Set to "true" to also resolve the account's workers.dev subdomain.
+     required: false
+     default: "false"
++  refuse-worker:
++    description: >-
++      Fail when the account hosts a Worker with this name. Production and
++      everything else live in separate accounts, so each deploy names a Worker
++      only the other account has — proof it reached the account meant for it.
++    required: false
++    default: ""
+ 
+ outputs:
+   account_id:
+@@ -39,6 +46,7 @@ runs:
+         CF_API_TOKEN: ${{ inputs.api-token }}
+         CF_ACCOUNT_ID_OVERRIDE: ${{ inputs.account-id }}
+         CF_RESOLVE_SUBDOMAIN: ${{ inputs.resolve-subdomain }}
++        CF_REFUSE_WORKER: ${{ inputs.refuse-worker }}
+       run: |
+         set -euo pipefail
+ 
+@@ -80,6 +88,17 @@ runs:
+         echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
+         echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+ 
++        if [ -n "$CF_REFUSE_WORKER" ]; then
++          FOUND=$(curl -fsS \
++            -H "Authorization: Bearer $CF_API_TOKEN" \
++            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts" \
++            | jq -r --arg name "$CF_REFUSE_WORKER" '.result[] | select(.id == $name) | .id')
++          if [ -n "$FOUND" ]; then
++            echo "::error::Account $ACCOUNT_ID hosts the Worker $CF_REFUSE_WORKER, so this is the wrong account for this deploy. Production and non-production deploys use separate accounts: check which CLOUDFLARE_API_TOKEN this job got (repo secret, or the production environment's)."
++            exit 1
++          fi
++        fi
++
+         SUBDOMAIN=""
+         if [ "$CF_RESOLVE_SUBDOMAIN" = "true" ]; then
+           SUBDOMAIN=$(curl -fsS \

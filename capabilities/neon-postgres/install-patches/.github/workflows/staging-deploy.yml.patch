@@ -1,0 +1,67 @@
+diff --git a/.github/workflows/staging-deploy.yml b/.github/workflows/staging-deploy.yml
+index d30fbc7..4ce6f3d 100644
+--- a/.github/workflows/staging-deploy.yml
++++ b/.github/workflows/staging-deploy.yml
+@@ -49,45 +49,32 @@ jobs:
+       - name: Build
+         run: pnpm build
+ 
+-      # The staging D1 is normally created during setup (previews clone from
+-      # it); the create branch here is a self-healing/rebuild path. Migrations
+-      # below keep it at schema either way.
+-      - name: Find or create staging D1
+-        id: d1
+-        run: |
+-          set -euo pipefail
+-          DB_NAME=project-name-staging
+-          EXISTING=$(pnpm --silent --filter @app/backend exec wrangler d1 list --json \
+-            | jq -r ".[] | select(.name == \"$DB_NAME\") | .uuid")
+-          if [ -n "$EXISTING" ]; then
+-            echo "Found existing staging D1: $DB_NAME ($EXISTING)"
+-            ID="$EXISTING"
+-          else
+-            echo "Creating staging D1: $DB_NAME"
+-            pnpm --silent --filter @app/backend exec wrangler d1 create "$DB_NAME"
+-            ID=$(pnpm --silent --filter @app/backend exec wrangler d1 info "$DB_NAME" --json \
+-              | jq -r '.uuid')
+-          fi
+-          if [ -z "$ID" ] || [ "$ID" = "null" ]; then
+-            echo "::error::Could not resolve UUID for $DB_NAME"
+-            exit 1
+-          fi
+-          echo "db_name=$DB_NAME" >> "$GITHUB_OUTPUT"
+-          echo "id=$ID" >> "$GITHUB_OUTPUT"
++      # Every preview branches off this one. Find-or-create is a self-healing
++      # path (it branches off production when missing); migrations below keep
++      # it at schema either way.
++      - name: Find or create the staging Neon branch
++        id: neon
++        uses: ./.github/actions/neon-env
++        with:
++          api-key: ${{ secrets.NEON_API_KEY }}
++          project-id: ${{ secrets.NEON_PROJECT_ID }}
++          branch: staging
++          create: "true"
++
++      - name: Apply staging migrations
++        env:
++          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
++        run: pnpm db:migrate
+ 
+       - name: Generate staging wrangler config
+         env:
+           TARGET: staging
+-          DB_NAME: ${{ steps.d1.outputs.db_name }}
+-          DB_ID: ${{ steps.d1.outputs.id }}
++          DB_CONNECTION_STRING: ${{ steps.neon.outputs.db_url }}
+           DEPLOY_ORIGIN: https://project-name-staging.${{ steps.cf.outputs.subdomain }}.workers.dev
+         run: |
+           echo "Staging canonical URL: $DEPLOY_ORIGIN"
+           node scripts/gen-wrangler-config.mjs
+ 
+-      - name: Apply staging migrations
+-        run: pnpm --filter @app/backend exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.staging.json --remote
+-
+       # Sets the active deployment of the project-name-staging worker (its
+       # default workers.dev route). Preview versions uploaded by
+       # preview-deploy.yml are pinned to their aliases and are unaffected.

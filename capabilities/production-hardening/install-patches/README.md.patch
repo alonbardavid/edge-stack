@@ -1,0 +1,41 @@
+diff --git a/README.md b/README.md
+index 5750d71..86edd95 100644
+--- a/README.md
++++ b/README.md
+@@ -1,9 +1,9 @@
+ # project-name
+ 
+ An **edge-stack** project: a pnpm + Turbo monorepo that runs entirely on Cloudflare's
+-edge — a Hono API and two React (Vite) SPAs served from one Cloudflare Worker, backed by a
+-Cloudflare D1 (SQLite) database, with Playwright e2e tests and a GitHub Actions pipeline that
+-gives every pull request its own live preview.
++edge — a Hono API and the end-user React (Vite) SPA on one Cloudflare Worker, the admin SPA
++and its API on a second, both backed by one Cloudflare D1 (SQLite) database, with Playwright
++e2e tests and a GitHub Actions pipeline that gives every pull request its own live preview.
+ 
+ > Scaffolded with the [`create-edge-stack`](https://github.com/alonbardavid/edge-stack) skill.
+ > The stack version and installed capabilities are tracked in [`.edge-stack.json`](./.edge-stack.json).
+@@ -13,14 +13,14 @@ gives every pull request its own live preview.
+ 
+ ```bash
+ pnpm install
+-pnpm dev          # builds, then runs backend + frontend + admin frontend together
++pnpm dev          # builds, then runs both workers and both frontends together
+ pnpm test         # Playwright e2e (run `pnpm --filter tests exec playwright install` once)
+ pnpm type-check
+ pnpm lint
+ ```
+ 
+ Create an admin with `pnpm admin:create --username <u> --password <p>`, then manage
+-end-users from `/admin`.
++end-users from the admin app (http://localhost:5174/admin/ in dev).
+ 
+ ## Docs
+ 
+@@ -28,5 +28,6 @@ end-users from `/admin`.
+ - [Logging](libs/logging/README.md) — `moduleLogger`, request context, verbosity
+ - [Development](docs/development.md) — local dev, the build, local D1
+ - [Deployment](docs/deployment.md) — preview, staging and production
++- [Production](docs/production.md) — the hardened setup: accounts, GitHub rules, Access
+ - [Tests](tests/README.md) — e2e traps
+ - [Decisions](docs/adrs/) — architecture decision records

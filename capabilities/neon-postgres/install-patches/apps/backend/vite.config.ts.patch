@@ -1,0 +1,25 @@
+diff --git a/apps/backend/vite.config.ts b/apps/backend/vite.config.ts
+index 1f374df..4c6507d 100644
+--- a/apps/backend/vite.config.ts
++++ b/apps/backend/vite.config.ts
+@@ -1,7 +1,8 @@
+ import { defineConfig } from "vite";
+ import { cloudflare } from "@cloudflare/vite-plugin";
+ 
+-const persistTo = process.env.WORKER_PERSIST_TO;
++// The e2e run points the worker at the test database (tests/playwright.config.ts).
++const databaseUrl = process.env.WORKER_DATABASE_URL;
+ 
+ export default defineConfig({
+   plugins: [
+@@ -9,7 +10,9 @@ export default defineConfig({
+       // Pins the output to dist/worker. Without it the dir is named after the
+       // worker in wrangler.jsonc, and every deploy path would depend on it.
+       viteEnvironment: { name: "worker" },
+-      persistState: persistTo ? { path: persistTo } : true,
++      config: databaseUrl
++        ? { vars: { DB_CONNECTION_STRING: databaseUrl } }
++        : undefined,
+     }),
+   ],
+   server: {

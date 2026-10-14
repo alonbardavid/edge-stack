@@ -1,0 +1,20 @@
+diff --git a/apps/frontend/src/main.tsx b/apps/frontend/src/main.tsx
+index 492afb3..3733fe6 100644
+--- a/apps/frontend/src/main.tsx
++++ b/apps/frontend/src/main.tsx
+@@ -7,6 +7,7 @@ import { Notifications } from "@mantine/notifications";
+ import { theme } from "@lib/ds";
+ import { App } from "./App";
+ import { AnalyticsTracker } from "./logic/analytics/AnalyticsTracker";
++import { ConsentBanner } from "./components/ConsentBanner";
+ import "@mantine/core/styles.css";
+ import "@mantine/notifications/styles.css";
+ 
+@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
+           <Notifications position="bottom-right" autoClose={4000} />
+           <App />
+           <AnalyticsTracker />
++          <ConsentBanner />
+         </MantineProvider>
+       </QueryClientProvider>
+     </BrowserRouter>
