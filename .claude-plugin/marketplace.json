@@ -1,7 +1,7 @@
 {
   "name": "edge-stack",
   "owner": {
-    "name": "alonbd"
+    "name": "alonbardavid"
   },
   "metadata": {
     "description": "The edge-stack plugin: scaffold, upgrade, and extend opinionated pnpm + Cloudflare + Hono + React projects.",
