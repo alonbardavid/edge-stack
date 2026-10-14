@@ -1,0 +1,21 @@
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+index 54e618f..5d258e0 100644
+--- a/eslint.config.mjs
++++ b/eslint.config.mjs
+@@ -89,6 +89,16 @@ export default defineConfig(
+           selector: "MemberExpression[object.name='React']",
+           message: "Use named imports from 'react' instead of React.xxx.",
+         },
++        {
++          selector: "VariableDeclarator[init.callee.name='getDb']",
++          message:
++            "Call getDb() at the point of use: a stored handle runs outside a later withTransaction().",
++        },
++        {
++          selector: "ReturnStatement > CallExpression[callee.name='getDb']",
++          message:
++            "Call getDb() at the point of use: a returned handle runs outside a later withTransaction().",
++        },
+       ],
+     },
+   },

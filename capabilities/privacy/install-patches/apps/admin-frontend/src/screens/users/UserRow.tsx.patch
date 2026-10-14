@@ -1,0 +1,171 @@
+diff --git a/apps/admin-frontend/src/screens/users/UserRow.tsx b/apps/admin-frontend/src/screens/users/UserRow.tsx
+index ad30d97..504e90f 100644
+--- a/apps/admin-frontend/src/screens/users/UserRow.tsx
++++ b/apps/admin-frontend/src/screens/users/UserRow.tsx
+@@ -1,5 +1,13 @@
+ import { useState } from "react";
+-import { Button, Group, Stack, Table, Text } from "@mantine/core";
++import {
++  Badge,
++  Button,
++  Group,
++  Select,
++  Stack,
++  Table,
++  Text,
++} from "@mantine/core";
+ import { notifications } from "@mantine/notifications";
+ import { useMutation } from "@tanstack/react-query";
+ import { z } from "zod";
+@@ -11,8 +19,11 @@ import {
+   StandardForm,
+   useForm,
+ } from "@lib/ds";
++import { TRACKING_SETTINGS, type TrackingSetting } from "@lib/admin-contract";
+ import { orpc } from "../../logic/api/orpc";
+ import { errorMessage } from "../../logic/api/errorMessage";
++import { useUserLifecycle, type UserLifecycle } from "./useUserLifecycle";
++import { NukeConfirm } from "./NukeConfirm";
+ import type { ManagedUser } from "./types";
+ 
+ const schema = z.object({
+@@ -21,21 +32,31 @@ const schema = z.object({
+ 
+ export const UserRow = ({ user }: { user: ManagedUser }) => {
+   const [editing, setEditing] = useState(false);
++  const lifecycle = useUserLifecycle(user.id);
+ 
+   return (
+-    <Table.Tr>
++    <Table.Tr data-testid="admin-user-row" data-state={user.state}>
+       <Table.Td>{user.name}</Table.Td>
+       <Table.Td>{user.email}</Table.Td>
++      <Table.Td style={{ whiteSpace: "nowrap" }}>
++        <StateBadge state={user.state} />
++      </Table.Td>
++      <Table.Td>
++        <TrackingSelect
++          value={user.tracking}
++          disabled={lifecycle.isPending}
++          onChange={lifecycle.setTracking}
++        />
++      </Table.Td>
+       <Table.Td>
+         <Stack gap="xs">
+-          <Group justify="flex-end">
+-            <Button
+-              size="xs"
+-              variant="subtle"
+-              onClick={() => setEditing((open) => !open)}
+-            >
+-              {editing ? "Cancel" : "Set password"}
+-            </Button>
++          <Group justify="flex-end" gap="xs">
++            <RowActions
++              state={user.state}
++              lifecycle={lifecycle}
++              editing={editing}
++              onToggleEditing={() => setEditing((open) => !open)}
++            />
+           </Group>
+           {editing && (
+             <SetPasswordForm
+@@ -49,6 +70,98 @@ export const UserRow = ({ user }: { user: ManagedUser }) => {
+   );
+ };
+ 
++const STATE_BADGES: Record<
++  ManagedUser["state"],
++  { label: string; color: string }
++> = {
++  active: { label: "Active", color: "green" },
++  deleted: { label: "Deleted", color: "gray" },
++  nuked: { label: "Nuked", color: "red" },
++};
++
++const StateBadge = ({ state }: { state: ManagedUser["state"] }) => (
++  <Badge color={STATE_BADGES[state].color} variant="light">
++    {STATE_BADGES[state].label}
++  </Badge>
++);
++
++const TRACKING_OPTIONS = TRACKING_SETTINGS.map((value) => ({
++  value,
++  label: value,
++}));
++
++const TrackingSelect = ({
++  value,
++  disabled,
++  onChange,
++}: {
++  value: TrackingSetting | null;
++  disabled: boolean;
++  onChange: (tracking: TrackingSetting) => void;
++}) => (
++  <Select
++    aria-label="Tracking"
++    size="xs"
++    data={TRACKING_OPTIONS}
++    value={value}
++    placeholder="default"
++    disabled={disabled}
++    onChange={(next) => next && onChange(next as TrackingSetting)}
++    allowDeselect={false}
++    w={130}
++  />
++);
++
++const RowActions = ({
++  state,
++  lifecycle,
++  editing,
++  onToggleEditing,
++}: {
++  state: ManagedUser["state"];
++  lifecycle: UserLifecycle;
++  editing: boolean;
++  onToggleEditing: () => void;
++}) => {
++  if (state === "nuked") {
++    return null;
++  }
++  if (state === "deleted") {
++    return (
++      <>
++        <Button
++          size="xs"
++          variant="light"
++          disabled={lifecycle.isPending}
++          onClick={lifecycle.restore}
++        >
++          Restore
++        </Button>
++        <NukeConfirm
++          disabled={lifecycle.isPending}
++          onConfirm={lifecycle.nuke}
++        />
++      </>
++    );
++  }
++  return (
++    <>
++      <Button
++        size="xs"
++        color="red"
++        variant="light"
++        disabled={lifecycle.isPending}
++        onClick={lifecycle.remove}
++      >
++        Delete
++      </Button>
++      <Button size="xs" variant="subtle" onClick={onToggleEditing}>
++        {editing ? "Cancel" : "Set password"}
++      </Button>
++    </>
++  );
++};
++
+ const SetPasswordForm = ({
+   userId,
+   onDone,

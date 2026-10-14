@@ -1,0 +1,13 @@
+diff --git a/scripts/gen-wrangler-config.mjs b/scripts/gen-wrangler-config.mjs
+index 8fadf76..0a37f3e 100644
+--- a/scripts/gen-wrangler-config.mjs
++++ b/scripts/gen-wrangler-config.mjs
+@@ -44,6 +44,8 @@ function main() {
+     ...config.vars,
+     FRONTEND_CANONICAL_BASE_URL: OVERRIDES.frontendCanonicalBaseUrl,
+     AUTH_ALLOWED_HOSTS: OVERRIDES.authAllowedHosts,
++    ENVIRONMENT: environment.environment,
++    ANALYTICS_ENABLED: String(process.env.ANALYTICS_ENABLED === "true"),
+     // Every remote target (preview/staging/prod) runs in production mode. Local
+     // dev and e2e run from wrangler.jsonc and deliberately leave this unset.
+     NODE_ENV: "production",

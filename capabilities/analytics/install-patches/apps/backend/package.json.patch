@@ -1,0 +1,12 @@
+diff --git a/apps/backend/package.json b/apps/backend/package.json
+index 64433f8..38ad2fd 100644
+--- a/apps/backend/package.json
++++ b/apps/backend/package.json
+@@ -12,6 +12,7 @@
+   },
+   "dependencies": {
+     "@lib/admin-api": "workspace:*",
++    "@lib/analytics-server": "workspace:*",
+     "@lib/contract": "workspace:*",
+     "@lib/db-models": "workspace:*",
+     "@lib/identity": "workspace:*",

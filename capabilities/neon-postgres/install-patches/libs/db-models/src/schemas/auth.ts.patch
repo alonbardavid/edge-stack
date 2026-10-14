@@ -1,0 +1,123 @@
+diff --git a/libs/db-models/src/schemas/auth.ts b/libs/db-models/src/schemas/auth.ts
+index 37df494..d77ec4b 100644
+--- a/libs/db-models/src/schemas/auth.ts
++++ b/libs/db-models/src/schemas/auth.ts
+@@ -1,36 +1,36 @@
+-import { sql } from "drizzle-orm";
+-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
++import { pgTable, text, boolean, timestamp, index } from "drizzle-orm/pg-core";
+ 
+-export const user = sqliteTable("user", {
++export const user = pgTable("user", {
+   id: text("id").primaryKey(),
+   name: text("name").notNull(),
+   email: text("email").notNull().unique(),
+-  emailVerified: integer("email_verified", { mode: "boolean" })
+-    .default(false)
+-    .notNull(),
++  emailVerified: boolean("email_verified").default(false).notNull(),
+   image: text("image"),
+-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++    .defaultNow()
+     .notNull(),
+-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++    .defaultNow()
+     .notNull(),
+   // Soft-delete marker. Present for consistency with other app tables; not yet
+   // enforced (better-auth manages this table and does not filter on it).
+-  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
++  deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
+ });
+ 
+-export const userSessions = sqliteTable(
++export const userSessions = pgTable(
+   "user_sessions",
+   {
+     id: text("id").primaryKey(),
+-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
++    expiresAt: timestamp("expires_at", {
++      withTimezone: true,
++      mode: "date",
++    }).notNull(),
+     token: text("token").notNull().unique(),
+-    createdAt: integer("created_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+     ipAddress: text("ip_address"),
+     userAgent: text("user_agent"),
+@@ -41,7 +41,7 @@ export const userSessions = sqliteTable(
+   (table) => [index("user_sessions_user_id_idx").on(table.userId)],
+ );
+ 
+-export const userAccounts = sqliteTable(
++export const userAccounts = pgTable(
+   "user_accounts",
+   {
+     id: text("id").primaryKey(),
+@@ -53,36 +53,41 @@ export const userAccounts = sqliteTable(
+     accessToken: text("access_token"),
+     refreshToken: text("refresh_token"),
+     idToken: text("id_token"),
+-    accessTokenExpiresAt: integer("access_token_expires_at", {
+-      mode: "timestamp_ms",
++    accessTokenExpiresAt: timestamp("access_token_expires_at", {
++      withTimezone: true,
++      mode: "date",
+     }),
+-    refreshTokenExpiresAt: integer("refresh_token_expires_at", {
+-      mode: "timestamp_ms",
++    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
++      withTimezone: true,
++      mode: "date",
+     }),
+     scope: text("scope"),
+     password: text("password"),
+-    createdAt: integer("created_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+   },
+   (table) => [index("user_accounts_user_id_idx").on(table.userId)],
+ );
+ 
+-export const userVerifications = sqliteTable(
++export const userVerifications = pgTable(
+   "user_verifications",
+   {
+     id: text("id").primaryKey(),
+     identifier: text("identifier").notNull(),
+     value: text("value").notNull(),
+-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+-    createdAt: integer("created_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    expiresAt: timestamp("expires_at", {
++      withTimezone: true,
++      mode: "date",
++    }).notNull(),
++    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+-      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
++    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
++      .defaultNow()
+       .notNull(),
+   },
+   (table) => [index("user_verifications_identifier_idx").on(table.identifier)],

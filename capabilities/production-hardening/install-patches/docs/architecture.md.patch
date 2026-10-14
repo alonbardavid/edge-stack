@@ -1,0 +1,51 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 4a7fc11..3072048 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -4,9 +4,10 @@
+ 
+ ```
+ apps/
+-  backend/         Hono API on Cloudflare Workers; also serves both SPAs as static assets
++  backend/         Hono API on Cloudflare Workers; also serves the end-user SPA
++  admin-backend/   the admin Worker: the admin API and the admin SPA, on its own hostname
+   frontend/        end-user SPA (served at /)
+-  admin-frontend/  admin SPA (served at /admin)
++  admin-frontend/  admin SPA (served at /admin on the admin Worker)
+ libs/
+   contract/        oRPC API contract shared by backend + frontend
+   admin-contract/  oRPC contract for the admin API
+@@ -21,7 +22,8 @@ tests/             Playwright e2e
+ migrations/        D1 SQL migrations
+ ```
+ 
+-Frontend and API are same-origin (the Vite dev servers proxy `/api`), so there is no CORS.
++Each SPA is same-origin with its own Worker (the Vite dev servers proxy `/api`), so there is
++no CORS.
+ 
+ ## The API contract
+ 
+@@ -55,14 +57,18 @@ workers.dev URL and any custom domains.
+ 
+ ## The admin app
+ 
+-`apps/admin-frontend` (at `/admin`) has its own auth, separate from better-auth: `app_admin`
+-accounts with passwords hashed by `better-auth/crypto`, and an httpOnly `admin_session`
+-cookie holding a random token row (7-day expiry) that `requireAdmin` validates. Admins cannot
+-change their own password from the app; only `pnpm admin:create` manages admins.
++`apps/admin-frontend` (at `/admin` on the admin Worker) has its own auth, separate from
++better-auth: `app_admin` accounts with passwords hashed by `better-auth/crypto`, and an
++httpOnly `admin_session` cookie holding a random token row (7-day expiry) that
++`requireAdmin` validates. Admins cannot change their own password from the app; only
++`pnpm admin:create` manages admins.
+ 
+ `@lib/admin-api` exports one Hono app, `adminApp`: public `POST /api/admin/auth/login`, then
+ the `requireAdmin` gate, then logout, the `@lib/admin-contract` oRPC handler (me, list /
+-create users, set a user's password) and the admin SPA's assets.
++create users, set a user's password) and the admin SPA's assets. `apps/admin-backend` is a
++Worker that mounts it and nothing else, binding the same database as `apps/backend`; the
++end-user Worker contains no admin code, so its routes cannot reach it. In production the
++admin Worker sits behind Cloudflare Access ([production.md](production.md)).
+ 
+ ```bash
+ pnpm admin:create --username <u> --password <p>                          # local D1

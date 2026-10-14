@@ -1,0 +1,44 @@
+diff --git a/scripts/lib/environments.mjs b/scripts/lib/environments.mjs
+index dd9d29b..45dcd6d 100644
+--- a/scripts/lib/environments.mjs
++++ b/scripts/lib/environments.mjs
+@@ -1,6 +1,7 @@
+ // Deploy-target host configuration lives here so canonical URLs and every
+ // domain an uploaded version may answer on are reviewable in one place. Add
+ // custom domains to the appropriate host list; use hostnames only (no scheme).
++// The admin worker answers on its own hostname, which no code needs to know.
+ 
+ const PRODUCTION_HOSTS = [
+   "REPLACE_WITH_PROD_URL",
+@@ -19,23 +20,31 @@ const STAGING_WORKERS_DEV = "*project-name-staging.*.workers.dev";
+ export const ENVIRONMENTS = {
+   production: {
+     workerName: "project-name",
++    adminWorkerName: "project-name-admin",
+     canonicalBaseUrl: "https://REPLACE_WITH_PROD_URL",
+     allowedHosts: PRODUCTION_HOSTS,
++    // Production answers only on its custom domains, where Cloudflare Access
++    // and WAF rules apply; a workers.dev or preview URL would bypass them.
++    workersDev: false,
+     outFile: "wrangler.generated.production.json",
+   },
+   staging: {
+     workerName: "project-name-staging",
++    adminWorkerName: "project-name-admin-staging",
+     // The account's workers.dev subdomain is resolved by the workflow.
+     canonicalBaseUrl: null,
+     allowedHosts: [...STAGING_HOSTS, STAGING_WORKERS_DEV],
++    workersDev: true,
+     outFile: "wrangler.generated.staging.json",
+   },
+   preview: {
+     workerName: "project-name-staging",
++    adminWorkerName: "project-name-admin-staging",
+     // The branch alias and account subdomain are resolved by the workflow.
+     canonicalBaseUrl: null,
+     // A preview version may be promoted onto any configured staging domain.
+     allowedHosts: [...STAGING_HOSTS],
++    workersDev: true,
+     outFile: "wrangler.generated.json",
+   },
+ };

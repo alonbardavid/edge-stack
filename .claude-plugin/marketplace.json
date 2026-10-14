@@ -1,0 +1,17 @@
+{
+  "name": "edge-stack",
+  "owner": {
+    "name": "alonbardavid"
+  },
+  "metadata": {
+    "description": "The edge-stack plugin: scaffold, upgrade, and extend opinionated pnpm + Cloudflare + Hono + React projects.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "edge-stack",
+      "source": "./",
+      "description": "Create, update, and extend opinionated 'edge stack' projects (pnpm monorepo + Turbo, Cloudflare Workers + D1, Hono + oRPC backend, React/Vite frontend, Playwright e2e, GitHub Actions preview/prod deploys). Skills: create-edge-stack, update-edge-stack, add-edge-capability."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+diff --git a/libs/contract/src/index.ts b/libs/contract/src/index.ts
+index 22cb346..2b8d6ec 100644
+--- a/libs/contract/src/index.ts
++++ b/libs/contract/src/index.ts
+@@ -1,5 +1,6 @@
+ import { oc, type ContractRouterClient } from "@orpc/contract";
+ import { z } from "zod";
++import { privacyRoutes } from "./privacy-schemas";
+ 
+ export * from "./listing";
+ 
+@@ -15,6 +16,7 @@ export type User = z.infer<typeof userSchema>;
+ // Every procedure needs a signed-in user; the worker rejects the rest with 401.
+ export const contract = {
+   me: oc.route({ method: "GET", path: "/api/me" }).output(userSchema),
++  ...privacyRoutes,
+ };
+ 
+ export type Contract = typeof contract;
+@@ -22,3 +24,4 @@ export type Contract = typeof contract;
+ export type ApiClient = ContractRouterClient<Contract>;
+ 
+ export { POSTHOG_HOST, POSTHOG_PROJECT_TOKEN } from "./analytics";
++export * from "./privacy-schemas";

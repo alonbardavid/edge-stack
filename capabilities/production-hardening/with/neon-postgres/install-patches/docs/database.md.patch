@@ -1,0 +1,41 @@
+diff --git a/docs/database.md b/docs/database.md
+index 4b6ec92..b68a10e 100644
+--- a/docs/database.md
++++ b/docs/database.md
+@@ -62,18 +62,28 @@ every parent directory of the repo must then be traversable by that user.
+ 
+ ## Neon
+ 
+-One Neon project, named `project-name`. Its default branch is production, `staging` is a
+-branch of it, and each git branch gets `preview/<branch>-<hash>`, a copy-on-write branch of
+-staging. Every deploy migrates its branch before shipping the worker.
++Two Neon projects. `project-name` holds production on its default branch;
++`project-name-staging` holds `staging` (a branch of its default) and each git branch's
++`preview/<branch>-<hash>`, a copy-on-write branch of staging. Every deploy migrates its
++branch before shipping the workers.
+ 
+ `.github/actions/neon-env` derives the project from the `NEON_API_KEY` secret (the project
+-named `project-name`, or the only one the key can see; an optional `NEON_PROJECT_ID` secret
+-overrides it), finds or creates the branch, and resolves its connection string for
+-`neondb` / `neondb_owner`. It masks the string and its password before output: every branch
+-inherits production's role password. No connection string is stored in GitHub.
++named for the target, or the only one the key can see; an optional `NEON_PROJECT_ID` secret
++overrides it), refuses the other target's project, finds or creates the branch, and resolves
++its connection string for `neondb` / `neondb_owner`. It masks the string and its password
++before output: every branch inherits its parent's role passwords. No connection string is
++stored in GitHub.
++
++Migrations run as `neondb_owner`; the Workers connect as `project_name_app`, which reads and
++writes rows but cannot change the schema or `schema_migrations`. After migrating, every
++deploy runs `scripts/ensure-app-role.mjs`: it creates the role in SQL (a role Neon creates is
++always a member of `neon_superuser`), sets its password from the `DB_APP_PASSWORD` secret,
++re-grants it every table and sequence, and outputs the branch's connection string with the
++role's credentials swapped in. A table created outside a migration needs the next deploy, or
++a manual `GRANT`, before the Workers can use it.
+ 
+ `DB_CONNECTION_STRING` is a plain worker var in each generated config, visible to anyone
+-with dashboard access to the Worker.
++with dashboard access to the Worker — the app role's, never the owner's.
+ 
+ Admins on a deployed environment: `pnpm admin:create --username <u> --password <p>
+ --database-url <url>`, with the branch's connection string from the Neon console.

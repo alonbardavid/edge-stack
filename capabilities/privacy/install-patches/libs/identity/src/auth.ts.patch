@@ -1,0 +1,22 @@
+diff --git a/libs/identity/src/auth.ts b/libs/identity/src/auth.ts
+index 631b67b..605fd09 100644
+--- a/libs/identity/src/auth.ts
++++ b/libs/identity/src/auth.ts
+@@ -2,7 +2,9 @@ import { env } from "cloudflare:workers";
+ import { analyticsHooks } from "./analytics-hooks";
+ import { betterAuth, type BetterAuthOptions } from "better-auth";
+ import { drizzleAdapter } from "better-auth/adapters/drizzle";
++import { createAuthMiddleware } from "better-auth/api";
+ import { getDb, authSchema, newEntityId, type Entity } from "@lib/db-models";
++import { refuseDeletedAccounts } from "./deleted-accounts";
+ 
+ type AuthEnv = {
+   BETTER_AUTH_SECRET: string;
+@@ -66,6 +68,7 @@ function buildOptions(): BetterAuthOptions {
+       enabled: true,
+       disableSignUp: true,
+     },
++    hooks: { before: createAuthMiddleware(refuseDeletedAccounts) },
+     advanced: {
+       database: { generateId: generateAuthId },
+     },

@@ -1,0 +1,13 @@
+diff --git a/libs/contract/src/index.ts b/libs/contract/src/index.ts
+index 11b3daa..bf68a65 100644
+--- a/libs/contract/src/index.ts
++++ b/libs/contract/src/index.ts
+@@ -1,6 +1,8 @@
+ import { oc, type ContractRouterClient } from "@orpc/contract";
+ import { z } from "zod";
+ 
++export { PRODUCT_DISPLAY_NAME } from "./constants";
++
+ export * from "./listing";
+ 
+ export const userSchema = z.object({

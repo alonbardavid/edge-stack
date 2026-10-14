@@ -1,0 +1,200 @@
+name: Resolve Neon environment
+description: >-
+  Resolve the Neon project id from a Neon API key and, optionally, find (or
+  create) a branch and resolve its connection string — so neither has to be
+  stored in GitHub. Exports NEON_PROJECT_ID to the job environment. The
+  connection string is masked before it is output, so it never reaches a log.
+
+inputs:
+  api-key:
+    description: Neon API key (the NEON_API_KEY repo secret).
+    required: true
+  project-id:
+    description: >-
+      Optional override. Only needed when the key can see several projects and
+      none of them is named after the project slug.
+    required: false
+    default: ""
+  project-name:
+    description: The Neon project name to look for when the key sees several projects.
+    required: false
+    default: project-name
+  branch:
+    description: >-
+      Neon branch whose connection string to resolve. Leave empty (and
+      default-branch "false") to only resolve the project.
+    required: false
+    default: ""
+  default-branch:
+    description: Set to "true" to resolve the project's default (production) branch instead of a named one.
+    required: false
+    default: "false"
+  create:
+    description: Set to "true" to create the named branch when it does not exist yet.
+    required: false
+    default: "false"
+  parent-branch:
+    description: Branch to create from (only used with create). Empty means the project's default branch.
+    required: false
+    default: ""
+  database:
+    description: Database name within the branch.
+    required: false
+    default: neondb
+  role:
+    description: Role to connect as.
+    required: false
+    default: neondb_owner
+
+outputs:
+  project_id:
+    description: The resolved Neon project id.
+    value: ${{ steps.resolve.outputs.project_id }}
+  branch_name:
+    description: The resolved branch name (empty when no branch was requested).
+    value: ${{ steps.resolve.outputs.branch_name }}
+  branch_id:
+    description: The resolved branch id (empty when no branch was requested).
+    value: ${{ steps.resolve.outputs.branch_id }}
+  created:
+    description: '"true" when this run created the branch.'
+    value: ${{ steps.resolve.outputs.created }}
+  db_url:
+    description: Connection string for the branch (masked; empty when no branch was requested).
+    value: ${{ steps.resolve.outputs.db_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve project, branch and connection string
+      id: resolve
+      shell: bash
+      env:
+        NEON_API_KEY: ${{ inputs.api-key }}
+        PROJECT_ID_OVERRIDE: ${{ inputs.project-id }}
+        PROJECT_NAME: ${{ inputs.project-name }}
+        BRANCH: ${{ inputs.branch }}
+        DEFAULT_BRANCH: ${{ inputs.default-branch }}
+        CREATE: ${{ inputs.create }}
+        PARENT_BRANCH: ${{ inputs.parent-branch }}
+        DATABASE: ${{ inputs.database }}
+        ROLE: ${{ inputs.role }}
+      run: |
+        set -euo pipefail
+        API="https://console.neon.tech/api/v2"
+
+        if [ -z "$NEON_API_KEY" ]; then
+          echo "::error::NEON_API_KEY is not set. Add it as a repo secret."
+          exit 1
+        fi
+
+        neon() {
+          curl -fsS -H "Authorization: Bearer $NEON_API_KEY" -H "Accept: application/json" "$@"
+        }
+
+        # The project is derived from the key: the one named after the project
+        # slug, or the only one the key can see. The override exists only for
+        # keys that see several projects and none of them carries that name.
+        if [ -n "$PROJECT_ID_OVERRIDE" ]; then
+          PROJECT_ID="$PROJECT_ID_OVERRIDE"
+          echo "Using the NEON_PROJECT_ID override: $PROJECT_ID"
+        else
+          PROJECTS=$(neon "$API/projects?limit=400")
+          COUNT=$(printf '%s' "$PROJECTS" | jq '.projects | length')
+          PROJECT_ID=$(printf '%s' "$PROJECTS" \
+            | jq -r --arg name "$PROJECT_NAME" '[.projects[] | select(.name == $name)][0].id // empty')
+          if [ -z "$PROJECT_ID" ] && [ "$COUNT" = "1" ]; then
+            PROJECT_ID=$(printf '%s' "$PROJECTS" | jq -r '.projects[0].id')
+          fi
+          if [ -z "$PROJECT_ID" ]; then
+            echo "The Neon API key can see $COUNT project(s):"
+            printf '%s' "$PROJECTS" | jq -r '.projects[] | "  - \(.name) (\(.id))"'
+            echo "::error::Cannot derive the Neon project: name it '$PROJECT_NAME', use a key that sees only that project, or set the NEON_PROJECT_ID repo secret."
+            exit 1
+          fi
+          echo "Resolved Neon project from the API key: $PROJECT_ID"
+        fi
+        echo "NEON_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+        echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+
+        if [ "$DEFAULT_BRANCH" != "true" ] && [ -z "$BRANCH" ]; then
+          exit 0
+        fi
+
+        BRANCHES=$(neon "$API/projects/$PROJECT_ID/branches")
+        # $1 = jq filter selecting the branch, $2 = field, $3 = value for $name
+        branch_field() {
+          printf '%s' "$BRANCHES" \
+            | jq -r --arg name "${3:-}" "[.branches[] | $1][0].$2 // empty"
+        }
+
+        CREATED=false
+        if [ "$DEFAULT_BRANCH" = "true" ]; then
+          BRANCH_ID=$(branch_field 'select(.default == true)' id)
+          BRANCH_NAME=$(branch_field 'select(.default == true)' name)
+        else
+          BRANCH_NAME="$BRANCH"
+          BRANCH_ID=$(branch_field 'select(.name == $name)' id "$BRANCH")
+          if [ -z "$BRANCH_ID" ] && [ "$CREATE" = "true" ]; then
+            if [ -n "$PARENT_BRANCH" ]; then
+              PARENT_ID=$(branch_field 'select(.name == $name)' id "$PARENT_BRANCH")
+              if [ -z "$PARENT_ID" ]; then
+                echo "::error::Parent Neon branch '$PARENT_BRANCH' does not exist in project $PROJECT_ID (staging-deploy creates 'staging' on the first push to main)"
+                exit 1
+              fi
+            else
+              PARENT_ID=$(branch_field 'select(.default == true)' id)
+            fi
+            echo "Creating Neon branch '$BRANCH' from $PARENT_ID"
+            BODY=$(jq -n --arg name "$BRANCH" --arg parent "$PARENT_ID" \
+              '{branch: {name: $name, parent_id: $parent}, endpoints: [{type: "read_write"}]}')
+            RESPONSE=$(neon -X POST -H "Content-Type: application/json" \
+              "$API/projects/$PROJECT_ID/branches" --data "$BODY")
+            BRANCH_ID=$(printf '%s' "$RESPONSE" | jq -r '.branch.id')
+            CREATED=true
+            # Wait for the branch and its compute to be ready before anything
+            # connects to it.
+            for OP in $(printf '%s' "$RESPONSE" | jq -r '.operations[].id'); do
+              for _ in $(seq 1 120); do
+                STATUS=$(neon "$API/projects/$PROJECT_ID/operations/$OP" | jq -r '.operation.status')
+                case "$STATUS" in
+                  finished|skipped) break ;;
+                  failed|error|cancelled)
+                    echo "::error::Neon operation $OP ended as $STATUS while creating '$BRANCH'"
+                    exit 1
+                    ;;
+                esac
+                sleep 1
+              done
+              if [ "$STATUS" != "finished" ] && [ "$STATUS" != "skipped" ]; then
+                echo "::error::Neon operation $OP did not finish in time (last status: $STATUS)"
+                exit 1
+              fi
+            done
+          fi
+        fi
+        if [ -z "$BRANCH_ID" ]; then
+          echo "::error::No Neon branch ${BRANCH:-(default)} in project $PROJECT_ID"
+          exit 1
+        fi
+
+        DB_URL=$(neon -G "$API/projects/$PROJECT_ID/connection_uri" \
+          --data-urlencode "branch_id=$BRANCH_ID" \
+          --data-urlencode "database_name=$DATABASE" \
+          --data-urlencode "role_name=$ROLE" \
+          | jq -r '.uri // empty')
+        if [ -z "$DB_URL" ]; then
+          echo "::error::Could not resolve a connection URI for Neon branch '$BRANCH_NAME' (database=$DATABASE, role=$ROLE)"
+          exit 1
+        fi
+        # Masked before it is written anywhere: a branch inherits its parent's
+        # role passwords, so a preview's URL carries production's password.
+        echo "::add-mask::$DB_URL"
+        echo "::add-mask::$(node -e 'console.log(decodeURIComponent(new URL(process.argv[1]).password))' "$DB_URL")"
+        {
+          echo "branch_name=$BRANCH_NAME"
+          echo "branch_id=$BRANCH_ID"
+          echo "created=$CREATED"
+          echo "db_url=$DB_URL"
+        } >> "$GITHUB_OUTPUT"
+        echo "Resolved Neon branch '$BRANCH_NAME' ($BRANCH_ID, created=$CREATED)"

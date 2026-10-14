@@ -1,0 +1,13 @@
+diff --git a/apps/admin-frontend/src/screens/users/UsersTable.tsx b/apps/admin-frontend/src/screens/users/UsersTable.tsx
+index 66edbe3..df584e3 100644
+--- a/apps/admin-frontend/src/screens/users/UsersTable.tsx
++++ b/apps/admin-frontend/src/screens/users/UsersTable.tsx
+@@ -42,6 +42,8 @@ export const UsersTable = () => {
+               <Table.Tr>
+                 <Table.Th>Name</Table.Th>
+                 <Table.Th>Email</Table.Th>
++                <Table.Th miw={100}>Status</Table.Th>
++                <Table.Th>Tracking</Table.Th>
+                 <Table.Th />
+               </Table.Tr>
+             </Table.Thead>

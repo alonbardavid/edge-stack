@@ -1,0 +1,39 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 4a7fc11..6025556 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -11,14 +11,14 @@ libs/
+   contract/        oRPC API contract shared by backend + frontend
+   admin-contract/  oRPC contract for the admin API
+   admin-api/       self-contained admin backend
+-  db-models/       Drizzle schema + D1 helpers, prefixed entity ids
++  db-models/       Drizzle schema + request-scoped Postgres client, prefixed entity ids
+   identity/        end-user authentication (better-auth)
+   ds/              design system / theme, incl. the form primitives
+   logging/         LogTape configuration + moduleLogger (see its README)
+   server-commons/  shared server middleware (errors, request logging)
+ scripts/           build/deploy helpers
+ tests/             Playwright e2e
+-migrations/        D1 SQL migrations
++migrations/        hand-written Postgres SQL migrations
+ ```
+ 
+ Frontend and API are same-origin (the Vite dev servers proxy `/api`), so there is no CORS.
+@@ -41,7 +41,7 @@ the contract names. Frontends call them through `@orpc/tanstack-query`
+ ## End-user authentication
+ 
+ better-auth (email + password) in `@lib/identity` (`getAuth()`), mounted on `/api/auth/*`,
+-using its Drizzle adapter over D1 with the `user` / `user_sessions` / `user_accounts` /
++using its Drizzle adapter over Postgres with the `user` / `user_sessions` / `user_accounts` /
+ `user_verifications` tables. Sessions are httpOnly cookies; there is no client token.
+ 
+ There is no self-service sign-up (`emailAndPassword.disableSignUp`). End-users are created
+@@ -65,6 +65,6 @@ the `requireAdmin` gate, then logout, the `@lib/admin-contract` oRPC handler (me
+ create users, set a user's password) and the admin SPA's assets.
+ 
+ ```bash
+-pnpm admin:create --username <u> --password <p>                          # local D1
+-pnpm admin:create --username <u> --password <p> --db-name project-name-prod  # any remote D1
++pnpm admin:create --username <u> --password <p>                          # local dev database
++pnpm admin:create --username <u> --password <p> --database-url <url>     # any Postgres, e.g. a Neon branch
+ ```

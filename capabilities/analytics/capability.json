@@ -1,0 +1,7 @@
+{
+  "name": "analytics",
+  "version": "0.1.0",
+  "deliveredAs": "add-on",
+  "description": "Product analytics with PostHog through its own SDKs: posthog-js in the end-user SPA (manual events only, page views with ids masked out of every path and URL, the signed-in user identified) and posthog-node in the Worker behind @lib/analytics-server, a per-request scope that sends each request's events as one batch through waitUntil. The Worker reports state changes (signed_up, signed_in from better-auth's own writes); the browser reports intent. Only production delivers — staging, previews, local dev and e2e log every event instead, and a preview can be run by hand with delivery on. Turns off Cloudflare Web Analytics for the production hostname. Installed on demand by add-edge-capability; not part of a fresh project until added.",
+  "manifestKey": "analytics"
+}

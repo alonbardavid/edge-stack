@@ -1,0 +1,32 @@
+diff --git a/tests/playwright.config.ts b/tests/playwright.config.ts
+index e8c4568..a800ffe 100644
+--- a/tests/playwright.config.ts
++++ b/tests/playwright.config.ts
+@@ -1,4 +1,5 @@
+ import { defineConfig, devices } from "@playwright/test";
++import { TEST_DATABASE_URL } from "../scripts/lib/local-db-config.mjs";
+ 
+ export default defineConfig({
+   testDir: "./e2e",
+@@ -22,15 +23,16 @@ export default defineConfig({
+   ],
+   webServer: [
+     {
+-      // Must match the --persist-to directory tests/global-setup.ts seeds.
+-      // Teed to a file because e2e/logging/request-log.spec.ts reads what the
+-      // worker logged.
++      // Playwright starts web servers before globalSetup, so Postgres is
++      // ensured here. The worker uses the same database tests/global-setup.ts
++      // migrates and seeds. Teed to a file because
++      // e2e/logging/request-log.spec.ts reads what the worker logged.
+       command:
+-        "mkdir -p ../../tests/.logs && pnpm exec vite dev 2>&1 | tee ../../tests/.logs/worker.log",
++        "node ../../scripts/local-db.mjs ensure && mkdir -p ../../tests/.logs && pnpm exec vite dev 2>&1 | tee ../../tests/.logs/worker.log",
+       url: "http://localhost:8301/api/health",
+       reuseExistingServer: !process.env.CI,
+       cwd: "../apps/backend",
+-      env: { WORKER_PERSIST_TO: ".wrangler-test" },
++      env: { WORKER_DATABASE_URL: TEST_DATABASE_URL },
+       timeout: 120000,
+     },
+     {

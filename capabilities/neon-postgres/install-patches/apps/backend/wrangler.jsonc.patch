@@ -1,0 +1,25 @@
+diff --git a/apps/backend/wrangler.jsonc b/apps/backend/wrangler.jsonc
+index ddf0e13..4651798 100644
+--- a/apps/backend/wrangler.jsonc
++++ b/apps/backend/wrangler.jsonc
+@@ -23,16 +23,11 @@
+ 			"head_sampling_rate": 1
+ 		}
+ 	},
+-	// Never add a database_id: scripts/gen-wrangler-config.mjs injects one
+-	// per deploy target.
+-	"d1_databases": [
+-		{
+-			"binding": "DB",
+-			"database_name": "project-name-local",
+-			"migrations_dir": "../../migrations"
+-		}
+-	],
+ 	"vars": {
++		// The local Postgres from `pnpm db:start`. Deploy targets get their Neon
++		// branch from scripts/gen-wrangler-config.mjs; e2e overrides it in
++		// vite.config.ts.
++		"DB_CONNECTION_STRING": "postgres://postgres:postgres@localhost:5433/project_name_dev",
+ 		"FRONTEND_CANONICAL_BASE_URL": "http://localhost:5173",
+ 		"BETTER_AUTH_SECRET": "local-dev-secret-please-change-3f9a1c7d8e2b4506"
+ 	}

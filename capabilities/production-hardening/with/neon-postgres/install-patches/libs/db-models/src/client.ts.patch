@@ -1,0 +1,27 @@
+diff --git a/libs/db-models/src/client.ts b/libs/db-models/src/client.ts
+index 181f02e..4a25e5e 100644
+--- a/libs/db-models/src/client.ts
++++ b/libs/db-models/src/client.ts
+@@ -8,6 +8,8 @@ export type Db = NodePgDatabase;
+ 
+ export interface DbEnv {
+   DB_CONNECTION_STRING?: string;
++  // Production's optional Hyperdrive in front of Neon; wins when bound.
++  HYPERDRIVE?: { connectionString: string };
+ }
+ 
+ export interface DbClient {
+@@ -16,9 +18,11 @@ export interface DbClient {
+ }
+ 
+ // A Neon host is reached over WebSockets with @neondatabase/serverless (which
+-// supports transactions); anything else — local dev, e2e, CI — uses node-postgres.
++// supports transactions); anything else — Hyperdrive, local dev, e2e, CI — uses
++// node-postgres.
+ export async function createDbClient(env: DbEnv): Promise<DbClient> {
+-  const connectionString = env.DB_CONNECTION_STRING;
++  const connectionString =
++    env.HYPERDRIVE?.connectionString ?? env.DB_CONNECTION_STRING;
+   if (!connectionString) {
+     throw new Error(
+       "No database connection configured: set DB_CONNECTION_STRING",

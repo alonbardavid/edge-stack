@@ -1,0 +1,7 @@
+{
+  "name": "production-hardening",
+  "version": "0.1.0",
+  "deliveredAs": "add-on",
+  "description": "Isolates production from everything else: production and non-production in separate Cloudflare accounts (and Neon projects), each deploy refusing the other side's account, the production deploy in a GitHub `production` environment that alone holds production's secrets, production Workers reachable only on custom domains, the admin app split into its own Worker, and — with neon-postgres — the Workers connecting as a restricted Postgres role, with optional Hyperdrive. Most of it is account, GitHub and Cloudflare Access configuration, which INSTALL.md walks the user through. Installed on demand by add-edge-capability; not part of a fresh project until added.",
+  "manifestKey": "production-hardening"
+}

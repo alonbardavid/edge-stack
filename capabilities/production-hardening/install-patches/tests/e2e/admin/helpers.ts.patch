@@ -1,0 +1,18 @@
+diff --git a/tests/e2e/admin/helpers.ts b/tests/e2e/admin/helpers.ts
+index dcd4b1d..7f173e6 100644
+--- a/tests/e2e/admin/helpers.ts
++++ b/tests/e2e/admin/helpers.ts
+@@ -2,10 +2,12 @@ import { expect, APIRequestContext } from "@playwright/test";
+ import { TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD } from "./test-admin";
+ 
+ export const API = "http://localhost:8301";
++export const ADMIN_API = "http://localhost:8302";
+ export const APP_ORIGIN = "http://localhost:5173";
++export const ADMIN_ORIGIN = "http://localhost:5174";
+ 
+ export async function loginAsAdmin(request: APIRequestContext) {
+-  const res = await request.post(`${API}/api/admin/auth/login`, {
++  const res = await request.post(`${ADMIN_API}/api/admin/auth/login`, {
+     data: { username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD },
+   });
+   expect(res.status()).toBe(200);

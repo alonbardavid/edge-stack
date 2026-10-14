@@ -1,0 +1,12 @@
+diff --git a/apps/backend/tsconfig.json b/apps/backend/tsconfig.json
+index c9e5b5e..4194744 100644
+--- a/apps/backend/tsconfig.json
++++ b/apps/backend/tsconfig.json
+@@ -7,7 +7,6 @@
+     "lib": ["ES2022"]
+   },
+   "references": [
+-    { "path": "../../libs/admin-api" },
+     { "path": "../../libs/contract" },
+     { "path": "../../libs/db-models" },
+     { "path": "../../libs/identity" },

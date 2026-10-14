@@ -1,0 +1,42 @@
+diff --git a/docs/development.md b/docs/development.md
+index 0eb3fea..890dc37 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -1,21 +1,22 @@
+ # Development
+ 
+ ```bash
+-pnpm dev            # builds first, then runs all three dev servers
++pnpm dev            # starts local Postgres, builds, then runs all three dev servers
+ pnpm db:new <name>  # create migrations/<timestamp>_<name>.sql
+-pnpm db:migrate     # apply migrations to the local D1
++pnpm db:migrate     # apply migrations (local dev database unless --database-url / $DATABASE_URL)
+ pnpm build          # bundle the worker and both SPAs
+ ```
+ 
+ The backend runs under `vite dev` on port 8301 — the worker executes in workerd via
+ `@cloudflare/vite-plugin`, with hot reload — and both frontend dev servers proxy `/api` to
+-it. Local dev binds the `project-name-local` D1 by name in `apps/backend/wrangler.jsonc`,
+-with local-dev `vars`; no remote Cloudflare resource is touched.
++it. Local dev connects to the local Postgres through the `DB_CONNECTION_STRING` var in
++`apps/backend/wrangler.jsonc`, with the other local-dev `vars`; no remote resource is
++touched. See [database.md](database.md).
+ 
+ ## The build
+ 
+ The backend is bundled by vite + `@cloudflare/vite-plugin`; `tsc` only type-checks.
+-Wrangler is the deploy and D1 CLI.
++Wrangler is the deploy CLI.
+ 
+ - `apps/backend/wrangler.jsonc` is the build's **input** (`main: "src/index.ts"`).
+   `vite build` emits `apps/backend/dist/worker/wrangler.json` plus a redirect at
+@@ -27,9 +28,3 @@ Wrangler is the deploy and D1 CLI.
+   no `ASSETS` binding. That is why `pnpm dev` and `pnpm test` build first.
+ - The two frontends stay separate vite apps: the plugin supports one client environment per
+   worker, and folding the admin SPA in would break admin isolation.
+-
+-## Local D1
+-
+-Dev persists to `apps/backend/.wrangler/state`, where `wrangler d1 … --local` writes, so
+-`pnpm db:migrate` and `pnpm admin:create` target it. e2e uses its own state in
+-`.wrangler-test` — see [tests/README.md](../tests/README.md).

@@ -1,0 +1,61 @@
+diff --git a/libs/analytics-server/src/scope.ts b/libs/analytics-server/src/scope.ts
+index 02ea51a..67bd5cb 100644
+--- a/libs/analytics-server/src/scope.ts
++++ b/libs/analytics-server/src/scope.ts
+@@ -3,6 +3,7 @@ import { PostHog } from "posthog-node";
+ import { POSTHOG_HOST, POSTHOG_PROJECT_TOKEN } from "@lib/contract";
+ import { moduleLogger } from "@lib/logging";
+ import type { CaptureInput, IdentifyInput } from "./types";
++import { loadSuppressedUserIds } from "./tracking";
+ 
+ const log = moduleLogger("analytics-server/scope");
+ 
+@@ -26,7 +27,8 @@ const requestAnalytics = new AsyncLocalStorage<Collector>();
+ 
+ /**
+  * Runs `run` in a scope that buffers every event it emits, then sends them as
+- * one batch through `waitUntil`, so tracking never delays the response.
++ * one batch through `waitUntil`, so tracking never delays the response. It is
++ * also the one place a user who opted out is dropped, whoever raised the event.
+  */
+ export async function withAnalytics<T>(
+   config: ScopeConfig,
+@@ -72,9 +74,36 @@ function scheduleFlush(collector: Collector): void {
+   if (queued.length === 0) {
+     return;
+   }
+-  collector.waitUntil(
+-    collector.config.deliver ? deliver(queued) : logEmissions(queued),
++  collector.waitUntil(flush(collector.config, queued));
++}
++
++async function flush(config: ScopeConfig, queued: Emission[]): Promise<void> {
++  const allowed = await allowedEmissions(queued);
++  if (allowed.length === 0) {
++    return;
++  }
++  await (config.deliver ? deliver(allowed) : logEmissions(allowed));
++}
++
++// A failed lookup drops the batch: sending an opted-out user's events is the
++// one mistake this must not make.
++async function allowedEmissions(queued: Emission[]): Promise<Emission[]> {
++  const distinctIds = [...new Set(queued.map((e) => e.distinctId))];
++  const suppressed = await loadSuppressedUserIds(distinctIds).catch(
++    (err: unknown) => {
++      log.error("could not read tracking settings, dropping the batch", {
++        err,
++      });
++      return new Set(distinctIds);
++    },
+   );
++  const allowed = queued.filter((e) => !suppressed.has(e.distinctId));
++  if (allowed.length < queued.length) {
++    log.info("dropped events for opted-out users", {
++      dropped: queued.length - allowed.length,
++    });
++  }
++  return allowed;
+ }
+ 
+ async function deliver(emissions: Emission[]): Promise<void> {

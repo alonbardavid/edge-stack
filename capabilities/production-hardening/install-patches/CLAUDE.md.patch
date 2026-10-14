@@ -1,0 +1,49 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 95d4168..15dccc1 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,7 +1,7 @@
+ # Project Rules
+ 
+-project-name — an edge-stack pnpm + Turbo monorepo on Cloudflare Workers: a Hono API and two
+-React SPAs served from one Worker, on D1, with Playwright e2e.
++project-name — an edge-stack pnpm + Turbo monorepo on Cloudflare Workers: a Hono API serving
++the end-user SPA, and an admin Worker serving the admin SPA, on D1, with Playwright e2e.
+ 
+ ## Maintaining this file
+ 
+@@ -21,7 +21,7 @@ It is a rulebook, not a changelog.
+   only what is true now, in the present tense. History belongs in git.
+ - **Never belongs here:** how a feature works, change logs, issue/PR numbers, post-mortems,
+   or anything one `grep` would answer. Put it in the right doc and link to it: `README.md`
+-  indexes them — architecture, development and deployment live under `docs/`, a lib's
++  indexes them — architecture, development, deployment and production live under `docs/`, a lib's
+   reference in its own `README.md`, test traps in `tests/README.md`, code-review rules in
+   `.claude/commands/check-conventions.md`.
+ - Memory goes in this project file, not per-user memory (`~/.claude/…`).
+@@ -36,9 +36,12 @@ It is a rulebook, not a changelog.
+ 
+ ## Architecture boundaries
+ 
+-- **Admin code is isolated** so it can be extracted into its own app: `@lib/admin-api`,
+-  `@lib/admin-contract`, or a future `apps/admin-backend` only — plus the admin tables in
+-  `@lib/db-models`. The host app wires it in with one `app.route("/", adminApp)`.
++- **Admin code is isolated** in its own Worker: `@lib/admin-api`, `@lib/admin-contract` and
++  `apps/admin-backend` only — plus the admin tables in `@lib/db-models`. `apps/backend`
++  never imports admin code; the two Workers share only the database.
++- **Production is deployed only by `prod-deploy.yml`**, from the `production` GitHub
++  environment, into its own Cloudflare account — never from a laptop, and never a resource
++  shared with staging or previews. See [docs/production.md](docs/production.md).
+ - **The API is contract-first** (oRPC): declare a procedure in `@lib/contract` before
+   implementing it on the `api` implementer, which admits only signed-in users. See
+   `docs/architecture.md`.
+@@ -53,7 +56,7 @@ It is a rulebook, not a changelog.
+ 
+ - A Hono middleware must **`return withContext(…, next)`** — LogTape's context is a scope,
+   not a store, so fields added outside it are silently dropped.
+-- `turbo.json`'s backend `build` outputs must include `.wrangler/deploy/**`, or a cache hit
+-  restores `dist/` without the redirect and deploy-config generation fails.
++- `turbo.json`'s `build` outputs must include `.wrangler/deploy/**`, or a cache hit restores
++  a worker's `dist/` without the redirect and deploy-config generation fails.
+ - `kysely` is pinned in `pnpm.overrides` because better-auth statically imports its kysely
+   adapter even on the Drizzle path, and 0.29 dropped the root export it needs.

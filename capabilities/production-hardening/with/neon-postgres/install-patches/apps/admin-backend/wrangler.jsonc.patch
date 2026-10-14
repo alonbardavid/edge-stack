@@ -1,0 +1,24 @@
+diff --git a/apps/admin-backend/wrangler.jsonc b/apps/admin-backend/wrangler.jsonc
+index dce8367..5bd1cc3 100644
+--- a/apps/admin-backend/wrangler.jsonc
++++ b/apps/admin-backend/wrangler.jsonc
+@@ -18,13 +18,10 @@
+ 			"head_sampling_rate": 1
+ 		}
+ 	},
+-	// The backend's database: the same name, so local dev shares its state
+-	// (vite.config.ts persists there). Never add a database_id:
+-	// scripts/gen-wrangler-config.mjs injects one per deploy target.
+-	"d1_databases": [
+-		{
+-			"binding": "DB",
+-			"database_name": "project-name-local"
+-		}
+-	]
++	"vars": {
++		// The backend's local Postgres. Deploy targets get the backend's
++		// connection from scripts/gen-wrangler-config.mjs; e2e overrides it in
++		// vite.config.ts.
++		"DB_CONNECTION_STRING": "postgres://postgres:postgres@localhost:5433/project_name_dev"
++	}
+ }

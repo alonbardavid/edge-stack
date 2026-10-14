@@ -1,0 +1,29 @@
+diff --git a/package.json b/package.json
+index f46d20d..651e8cd 100644
+--- a/package.json
++++ b/package.json
+@@ -12,10 +12,12 @@
+     "build": "turbo run build",
+     "predev": "pnpm build",
+     "pretest": "pnpm build",
+-    "dev": "concurrently --names \"backend,frontend,admin\" --prefix-colors \"blue,magenta,cyan\" --kill-others --raw \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:admin\"",
+-    "dev:ci": "concurrently --names \"backend,frontend,admin\" --kill-others --raw \"pnpm run dev:ci:backend\" \"pnpm run dev:ci:frontend\" \"pnpm run dev:ci:admin\"",
++    "dev": "concurrently --names \"backend,admin-backend,frontend,admin\" --prefix-colors \"blue,green,magenta,cyan\" --kill-others --raw \"pnpm run dev:backend\" \"pnpm run dev:admin-backend\" \"pnpm run dev:frontend\" \"pnpm run dev:admin\"",
++    "dev:ci": "concurrently --names \"backend,admin-backend,frontend,admin\" --kill-others --raw \"pnpm run dev:ci:backend\" \"pnpm run dev:ci:admin-backend\" \"pnpm run dev:ci:frontend\" \"pnpm run dev:ci:admin\"",
+     "dev:backend": "pnpm --filter @app/backend dev",
+     "dev:ci:backend": "pnpm --filter @app/backend dev:ci",
++    "dev:admin-backend": "pnpm --filter @app/admin-backend dev",
++    "dev:ci:admin-backend": "pnpm --filter @app/admin-backend dev:ci",
+     "dev:frontend": "pnpm --filter @app/frontend dev:vite",
+     "dev:ci:frontend": "pnpm --filter @app/frontend dev:vite",
+     "dev:admin": "pnpm --filter @app/admin-frontend dev:vite",
+@@ -24,9 +26,6 @@
+     "admin:create": "turbo run build --filter=@lib/db-models --output-logs=errors-only && node scripts/create-admin.mjs",
+     "db:new": "node scripts/new-migration.mjs",
+     "db:migrate": "pnpm --filter @app/backend exec wrangler d1 migrations apply DB",
+-    "gen:prod-config": "TARGET=production DB_NAME=project-name-prod DB_ID=$(pnpm --silent --filter @app/backend exec wrangler d1 info project-name-prod --json | jq -r .uuid) node scripts/gen-wrangler-config.mjs",
+-    "db:migrate:remote": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler d1 migrations apply DB --config dist/worker/wrangler.generated.production.json --remote",
+-    "deploy": "pnpm build && pnpm gen:prod-config && pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.production.json",
+     "type-check": "turbo run type-check",
+     "clean": "turbo run clean && rm -rf node_modules",
+     "lint": "eslint .",

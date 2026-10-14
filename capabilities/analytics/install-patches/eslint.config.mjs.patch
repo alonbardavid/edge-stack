@@ -1,0 +1,29 @@
+diff --git a/eslint.config.mjs b/eslint.config.mjs
+index 54e618f..c3cc42b 100644
+--- a/eslint.config.mjs
++++ b/eslint.config.mjs
+@@ -80,6 +80,24 @@ export default defineConfig(
+       ],
+     },
+   },
++  {
++    files: ["apps/frontend/src/**/*.{ts,tsx}"],
++    ignores: ["apps/frontend/src/logic/analytics/client.ts"],
++    rules: {
++      "no-restricted-imports": [
++        "error",
++        {
++          paths: [
++            {
++              name: "posthog-js",
++              message:
++                "Import `analytics` from logic/analytics/client: it is the posthog-js instance that masks ids and logs instead of sending outside production.",
++            },
++          ],
++        },
++      ],
++    },
++  },
+   {
+     files: ["**/*.tsx", "**/*.ts"],
+     rules: {

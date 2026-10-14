@@ -1,0 +1,86 @@
+diff --git a/libs/identity/src/auth.ts b/libs/identity/src/auth.ts
+index fe5a6bb..444de81 100644
+--- a/libs/identity/src/auth.ts
++++ b/libs/identity/src/auth.ts
+@@ -1,7 +1,12 @@
+ import { env } from "cloudflare:workers";
+ import { betterAuth, type BetterAuthOptions } from "better-auth";
+ import { drizzleAdapter } from "better-auth/adapters/drizzle";
++import { APIError, createAuthMiddleware } from "better-auth/api";
+ import { getDb, authSchema, newEntityId, type Entity } from "@lib/db-models";
++import { sendEmail } from "@lib/email-service";
++import { renderEmail } from "@lib/email-ds";
++import { PRODUCT_DISPLAY_NAME } from "@lib/contract";
++import { resetPassword, verifyEmail } from "./emails";
+ 
+ type AuthEnv = {
+   BETTER_AUTH_SECRET: string;
+@@ -9,6 +14,11 @@ type AuthEnv = {
+   AUTH_ALLOWED_HOSTS?: string;
+ };
+ 
++const SIGN_UP_EMAIL_PATH = "/sign-up/email";
++
++export const EMAIL_ALREADY_IN_USE_MESSAGE =
++  "This email is already in use. Please sign in instead.";
++
+ let cached: ReturnType<typeof betterAuth> | null = null;
+ 
+ // The origin a request arrived on wins over the configured one, so a single
+@@ -62,7 +72,55 @@ function buildOptions(): BetterAuthOptions {
+     verification: { modelName: "user_verifications" },
+     emailAndPassword: {
+       enabled: true,
+-      disableSignUp: true,
++      disableSignUp: false,
++      requireEmailVerification: true,
++      sendResetPassword: async ({ user, url }) => {
++        const { subject, html } = await renderEmail(resetPassword, {
++          name: user.name,
++          url,
++        });
++        await sendEmail({
++          to: user.email,
++          subject,
++          html,
++          fromName: PRODUCT_DISPLAY_NAME,
++        });
++      },
++    },
++    hooks: {
++      before: createAuthMiddleware(async (ctx) => {
++        if (ctx.path !== SIGN_UP_EMAIL_PATH) {
++          return;
++        }
++        const email = ctx.body?.email;
++        if (typeof email !== "string" || email.length === 0) {
++          return;
++        }
++        const existing =
++          await ctx.context.internalAdapter.findUserByEmail(email);
++        if (existing?.user) {
++          throw new APIError("UNPROCESSABLE_ENTITY", {
++            code: "USER_ALREADY_EXISTS",
++            message: EMAIL_ALREADY_IN_USE_MESSAGE,
++          });
++        }
++      }),
++    },
++    emailVerification: {
++      sendOnSignUp: true,
++      autoSignInAfterVerification: true,
++      sendVerificationEmail: async ({ user, url }) => {
++        const { subject, html } = await renderEmail(verifyEmail, {
++          name: user.name,
++          url,
++        });
++        await sendEmail({
++          to: user.email,
++          subject,
++          html,
++          fromName: PRODUCT_DISPLAY_NAME,
++        });
++      },
+     },
+     advanced: {
+       database: { generateId: generateAuthId },

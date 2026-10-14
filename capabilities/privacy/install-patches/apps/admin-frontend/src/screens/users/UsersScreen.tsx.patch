@@ -1,0 +1,13 @@
+diff --git a/apps/admin-frontend/src/screens/users/UsersScreen.tsx b/apps/admin-frontend/src/screens/users/UsersScreen.tsx
+index a42b4bc..b675464 100644
+--- a/apps/admin-frontend/src/screens/users/UsersScreen.tsx
++++ b/apps/admin-frontend/src/screens/users/UsersScreen.tsx
+@@ -4,7 +4,7 @@ import { UsersTable } from "./UsersTable";
+ 
+ export const UsersScreen = () => {
+   return (
+-    <Stack gap="lg" maw={720}>
++    <Stack gap="lg" maw={960}>
+       <Title order={3}>Users</Title>
+       <CreateUserForm />
+       <UsersTable />

@@ -1,0 +1,85 @@
+diff --git a/libs/admin-api/src/users/service.ts b/libs/admin-api/src/users/service.ts
+index 56701ca..7bae1e2 100644
+--- a/libs/admin-api/src/users/service.ts
++++ b/libs/admin-api/src/users/service.ts
+@@ -5,14 +5,20 @@ import {
+   matchesAllTerms,
+   user,
+   userAccounts,
++  trackingSettings,
+   and,
+   eq,
+   sql,
+   newEntityId,
+   type ListResult,
+ } from "@lib/db-models";
++import { asTrackingSetting } from "@lib/analytics-server";
+ import { moduleLogger } from "@lib/logging";
+-import type { UserListQuery } from "@lib/admin-contract";
++import type {
++  AccountState,
++  TrackingSetting,
++  UserListQuery,
++} from "@lib/admin-contract";
+ 
+ const log = moduleLogger("admin-api/users/service");
+ 
+@@ -22,6 +28,8 @@ export interface ManagedUser {
+   email: string;
+   emailVerified: boolean;
+   createdAt: number;
++  state: AccountState;
++  tracking: TrackingSetting | null;
+ }
+ 
+ export async function listUsers(
+@@ -35,8 +43,12 @@ export async function listUsers(
+         email: user.email,
+         emailVerified: user.emailVerified,
+         createdAt: user.createdAt,
++        deletedAt: user.deletedAt,
++        nukedAt: user.nukedAt,
++        tracking: trackingSettings.tracking,
+       })
+       .from(user)
++      .leftJoin(trackingSettings, eq(trackingSettings.userId, user.id))
+       .$dynamic(),
+     query,
+     {
+@@ -86,6 +98,8 @@ export async function createUser(input: {
+     email: input.email,
+     emailVerified: true,
+     createdAt: Date.now(),
++    state: "active",
++    tracking: null,
+   };
+ }
+ 
+@@ -121,6 +135,9 @@ function toManagedUser(row: {
+   email: string;
+   emailVerified: boolean;
+   createdAt: Date;
++  deletedAt: Date | null;
++  nukedAt: Date | null;
++  tracking: string | null;
+ }): ManagedUser {
+   return {
+     id: row.id,
+@@ -128,5 +145,17 @@ function toManagedUser(row: {
+     email: row.email,
+     emailVerified: row.emailVerified,
+     createdAt: row.createdAt.getTime(),
++    state: accountState(row),
++    tracking: asTrackingSetting(row.tracking),
+   };
+ }
++
++function accountState(row: {
++  deletedAt: Date | null;
++  nukedAt: Date | null;
++}): AccountState {
++  if (row.nukedAt) {
++    return "nuked";
++  }
++  return row.deletedAt ? "deleted" : "active";
++}

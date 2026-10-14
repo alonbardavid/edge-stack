@@ -1,0 +1,21 @@
+diff --git a/libs/db-models/package.json b/libs/db-models/package.json
+index c2b854e..ac98e18 100644
+--- a/libs/db-models/package.json
++++ b/libs/db-models/package.json
+@@ -22,11 +22,15 @@
+   },
+   "dependencies": {
+     "@lib/logging": "workspace:*",
++    "@neondatabase/serverless": "^1.1.0",
+     "drizzle-orm": "^0.45.1",
+-    "nanoid": "^5.1.6"
++    "nanoid": "^5.1.6",
++    "pg": "^8.23.0"
+   },
+   "devDependencies": {
+     "@cloudflare/workers-types": "^4.20260310.1",
++    "@types/node": "^20.11.0",
++    "@types/pg": "^8.21.0",
+     "typescript": "^5.3.3"
+   }
+ }

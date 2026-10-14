@@ -1,0 +1,18 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 84ec3cd..0130f90 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -49,6 +49,13 @@ It is a rulebook, not a changelog.
+   Worker reports state changes with `analytics` from `@lib/analytics-server`, where the
+   change is made; the browser reports only intent. Never track from a frontend mutation
+   hook, and never put an email, id or token in an event property.
++- **The privacy policy describes the app as it is** ([docs/privacy.md](docs/privacy.md)):
++  a change that collects, stores on the device or shares something new updates
++  `screens/privacy/content.ts` in the same PR. Personal data a new table holds about a user
++  is erased in `nukeUser` (`@lib/admin-api`) too.
++- **Tracking consent is analytics, not identity:** `@lib/analytics-server` owns the
++  `tracking_settings` table and drops opted-out users' batches; the vocabulary lives in
++  `libs/contract/src/privacy-schemas.ts`. Never claim an erasure that did not happen.
+ - Server code logs a **constant message** with everything variable as a property
+   (`log.info("user created", { userId })`); never put emails, passwords or tokens in a
+   property.

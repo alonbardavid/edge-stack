@@ -1,0 +1,49 @@
+diff --git a/apps/frontend/src/logic/analytics/client.ts b/apps/frontend/src/logic/analytics/client.ts
+index 1c05b9f..c8b65c5 100644
+--- a/apps/frontend/src/logic/analytics/client.ts
++++ b/apps/frontend/src/logic/analytics/client.ts
+@@ -1,5 +1,9 @@
+ import posthog, { type CaptureResult } from "posthog-js";
+-import { POSTHOG_HOST, POSTHOG_PROJECT_TOKEN } from "@lib/contract";
++import {
++  POSTHOG_HOST,
++  POSTHOG_PROJECT_TOKEN,
++  type TrackingSetting,
++} from "@lib/contract";
+ 
+ posthog.init(POSTHOG_PROJECT_TOKEN, {
+   api_host: POSTHOG_HOST,
+@@ -16,6 +20,10 @@ posthog.init(POSTHOG_PROJECT_TOKEN, {
+   // The SDK drops headless browsers as bots, which is every e2e run. Only a
+   // build that delivers has anything to protect.
+   opt_out_useragent_filter: !__ANALYTICS_DELIVER__,
++  // The visitor's stored decision is the source of truth, so the SDK starts
++  // silent and storing nothing until applyTrackingSetting opts it in.
++  opt_out_capturing_by_default: true,
++  opt_out_persistence_by_default: true,
+   sanitize_properties: maskIdentifiers,
+   before_send: __ANALYTICS_DELIVER__ ? undefined : logInstead,
+ });
+@@ -24,6 +32,22 @@ posthog.register({ app_side: "browser" });
+ 
+ export { posthog as analytics };
+ 
++/** Opting in is what lets the SDK store anything on the device, or send it. */
++export function applyTrackingSetting(tracking: TrackingSetting): void {
++  if (tracking !== "enabled") {
++    posthog.opt_out_capturing();
++    return;
++  }
++  if (posthog.has_opted_in_capturing()) {
++    return;
++  }
++  // The pageview fired at init was dropped while opted out, and opting in
++  // captures $opt_in rather than a pageview; later ones come from
++  // capture_pageview: "history_change".
++  posthog.opt_in_capturing({ captureEventName: false });
++  posthog.capture("$pageview");
++}
++
+ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+ // Long enough to be opaque and carrying a digit. Name static route segments
+ // with words only, or they are masked too.

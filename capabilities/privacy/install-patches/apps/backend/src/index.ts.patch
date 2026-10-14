@@ -1,0 +1,37 @@
+diff --git a/apps/backend/src/index.ts b/apps/backend/src/index.ts
+index 0f68fba..a7be4a7 100644
+--- a/apps/backend/src/index.ts
++++ b/apps/backend/src/index.ts
+@@ -10,13 +10,17 @@ import { getAuth } from "@lib/identity";
+ import { api } from "./routes/api";
+ import { health } from "./routes/health";
+ import { me } from "./routes/me";
++import { privacyConfigHandler, setTracking } from "./routes/privacy";
+ 
+ const log = moduleLogger("backend/index");
+ 
+-const apiHandler = new OpenAPIHandler(api.router({ me }), {
+-  plugins: [new RequestHeadersPlugin()],
+-  interceptors: [onError(logUnexpectedError)],
+-});
++const apiHandler = new OpenAPIHandler(
++  api.router({ me, setTrackingSetting: setTracking }),
++  {
++    plugins: [new RequestHeadersPlugin()],
++    interceptors: [onError(logUnexpectedError)],
++  },
++);
+ 
+ const app = new Hono();
+ 
+@@ -31,6 +35,10 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => getAuth().handler(c.req.raw));
+ 
+ app.get("/api/health", health);
+ 
++// Answers signed in or out: a visitor with no session is the one the consent
++// banner is for.
++app.get("/api/public/privacy-config", privacyConfigHandler);
++
+ app.route("/", adminApp);
+ 
+ app.use("/api/*", async (c, next) => {

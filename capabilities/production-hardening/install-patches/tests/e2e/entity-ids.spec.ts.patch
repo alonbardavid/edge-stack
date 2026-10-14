@@ -1,0 +1,26 @@
+diff --git a/tests/e2e/entity-ids.spec.ts b/tests/e2e/entity-ids.spec.ts
+index cdd4a8d..f4fd14e 100644
+--- a/tests/e2e/entity-ids.spec.ts
++++ b/tests/e2e/entity-ids.spec.ts
+@@ -1,6 +1,7 @@
+ import { test, expect } from "@playwright/test";
+ import {
+   API,
++  ADMIN_API,
+   APP_ORIGIN,
+   loginAsAdmin,
+   signInToMainApp,
+@@ -11,11 +12,11 @@ const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+ 
+ test("ids carry their entity's uppercase prefix", async ({ request }) => {
+   await loginAsAdmin(request);
+-  const me = await request.get(`${API}/api/admin/auth/me`);
++  const me = await request.get(`${ADMIN_API}/api/admin/auth/me`);
+   expect((await me.json()).id).toMatch(new RegExp(`^ADM_${NANOID}$`));
+ 
+   const email = `ids_${Date.now()}@example.com`;
+-  const created = await request.post(`${API}/api/admin/users`, {
++  const created = await request.post(`${ADMIN_API}/api/admin/users`, {
+     data: { email, name: "Ids User", password: "ids-pass-123" },
+   });
+   const { id: userId } = await created.json();

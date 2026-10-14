@@ -1,0 +1,37 @@
+diff --git a/apps/frontend/vite.config.ts b/apps/frontend/vite.config.ts
+index 2453ef8..7393e38 100644
+--- a/apps/frontend/vite.config.ts
++++ b/apps/frontend/vite.config.ts
+@@ -1,22 +1,8 @@
+-import { defineConfig, type PluginOption } from "vite";
++import { defineConfig } from "vite";
+ import react from "@vitejs/plugin-react";
+ 
+-const adminTrailingSlashRedirect: PluginOption = {
+-  name: "admin-trailing-slash-redirect",
+-  configureServer(server) {
+-    server.middlewares.use((req, res, next) => {
+-      if (req.url === "/admin") {
+-        res.writeHead(301, { Location: "/admin/" });
+-        res.end();
+-        return;
+-      }
+-      next();
+-    });
+-  },
+-};
+-
+ export default defineConfig({
+-  plugins: [react(), adminTrailingSlashRedirect],
++  plugins: [react()],
+   build: {
+     outDir: "dist/public",
+     emptyOutDir: true,
+@@ -24,7 +10,6 @@ export default defineConfig({
+   server: {
+     proxy: {
+       "/api": "http://localhost:8301",
+-      "/admin": { target: "http://localhost:5174", ws: true },
+     },
+   },
+ });

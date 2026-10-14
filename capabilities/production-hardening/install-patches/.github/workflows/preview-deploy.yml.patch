@@ -1,0 +1,55 @@
+diff --git a/.github/workflows/preview-deploy.yml b/.github/workflows/preview-deploy.yml
+index 7613357..7642a36 100644
+--- a/.github/workflows/preview-deploy.yml
++++ b/.github/workflows/preview-deploy.yml
+@@ -38,6 +38,7 @@ jobs:
+           api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+           account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+           resolve-subdomain: "true"
++          refuse-worker: project-name
+ 
+       - name: Compute preview D1 name and alias
+         id: names
+@@ -147,6 +148,31 @@ jobs:
+           fi
+           echo "url=$ALIAS_URL" >> "$GITHUB_OUTPUT"
+ 
++      # Same alias on the admin worker, trimmed so alias and worker name still
++      # fit one 63-character DNS label. Skipped until staging-deploy has
++      # created that worker on the first push to main.
++      - name: Upload admin preview version
++        id: admin
++        run: |
++          set -euo pipefail
++          WORKER=project-name-admin-staging
++          STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
++            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
++            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER/settings")
++          if [ "$STATUS" = "404" ]; then
++            echo "::notice::$WORKER does not exist yet; staging-deploy creates it on the next push to main"
++            exit 0
++          fi
++          ALIAS=$(printf '%s' "${{ steps.names.outputs.alias }}" | cut -c1-$((62 - ${#WORKER})) | sed 's/-$//')
++          cd apps/admin-backend
++          pnpm exec wrangler versions upload \
++            --config dist/worker/wrangler.generated.json \
++            --message "[PREVIEW] branch=${{ steps.names.outputs.branch }} sha=${GITHUB_SHA::7}" \
++            --preview-alias "$ALIAS" \
++            2>&1 | tee /tmp/admin-upload.log
++          URL=$(grep -Eo "https://${ALIAS}-${WORKER}\.[a-z0-9.-]+\.workers\.dev" /tmp/admin-upload.log | head -n1 || true)
++          echo "url=${URL:+$URL/admin/}" >> "$GITHUB_OUTPUT"
++
+       # The size wrangler just printed while uploading, turned into a comment
+       # section. The baseline is best-effort: main may not have recorded one yet,
+       # and the script simply drops the "vs main" comparison when it is missing.
+@@ -170,8 +196,10 @@ jobs:
+         run: |
+           set -euo pipefail
+           URL="${{ steps.upload.outputs.url }}"
++          ADMIN_URL="${{ steps.admin.outputs.url }}"
+           BODY="Preview version uploaded for branch \`${{ steps.names.outputs.branch }}\` @ \`${GITHUB_SHA::7}\`.
+           - Preview URL (stable per branch): ${URL:-_(not parsed — check workflow log)_}
++          - Admin: ${ADMIN_URL:-_(not uploaded — check workflow log)_}
+           - Alias: \`${{ steps.names.outputs.alias }}\`
+           - D1: \`${{ steps.names.outputs.db_name }}\` (id: \`${{ steps.d1.outputs.id }}\`)
+           - Not routed to production traffic."

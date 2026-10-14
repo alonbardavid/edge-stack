@@ -1,0 +1,34 @@
+diff --git a/apps/frontend/src/logic/analytics/AnalyticsTracker.tsx b/apps/frontend/src/logic/analytics/AnalyticsTracker.tsx
+index 5f80cb7..dcc4fb0 100644
+--- a/apps/frontend/src/logic/analytics/AnalyticsTracker.tsx
++++ b/apps/frontend/src/logic/analytics/AnalyticsTracker.tsx
+@@ -1,14 +1,26 @@
+ import { useEffect } from "react";
+ import { useMe } from "../authentication/useMe";
++import {
++  usePrivacyConfig,
++  usePrivacySync,
++  useTrackingApplied,
++} from "../privacy/usePrivacy";
+ import { analytics } from "./client";
+ 
+-/** Ties the browser's events to the signed-in user. */
+ export const AnalyticsTracker = () => {
++  usePrivacyConfig();
++  useTrackingApplied();
++  usePrivacySync();
++  useIdentifiedUser();
++  return null;
++};
++
++/** Ties the browser's events to the signed-in user. */
++function useIdentifiedUser(): void {
+   const { userId, name, email } = useMe();
+   useEffect(() => {
+     if (userId) {
+       analytics.identify(userId, { email, name });
+     }
+   }, [userId, email, name]);
+-  return null;
+-};
++}

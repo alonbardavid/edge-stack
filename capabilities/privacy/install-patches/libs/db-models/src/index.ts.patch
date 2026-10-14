@@ -1,0 +1,18 @@
+diff --git a/libs/db-models/src/index.ts b/libs/db-models/src/index.ts
+index 5026ded..cc2df7d 100644
+--- a/libs/db-models/src/index.ts
++++ b/libs/db-models/src/index.ts
+@@ -6,6 +6,7 @@ export {
+   authSchema,
+ } from "./schemas/auth";
+ export { appAdmin, appAdminSession } from "./schemas/admin";
++export { trackingSettings } from "./schemas/tracking";
+ export { ENTITY_PREFIXES, newEntityId, type Entity } from "./entity-ids";
+ export { getDb, checkHealth, type Db } from "./db";
+ export {
+@@ -18,4 +19,4 @@ export {
+   type ListFilter,
+   type ListOptions,
+ } from "./listing";
+-export { eq, and, or, sql } from "drizzle-orm";
++export { eq, and, or, inArray, sql } from "drizzle-orm";

@@ -1,0 +1,15 @@
+diff --git a/libs/contract/package.json b/libs/contract/package.json
+index d74e59f..e41e5cd 100644
+--- a/libs/contract/package.json
++++ b/libs/contract/package.json
+@@ -7,6 +7,10 @@
+     ".": {
+       "types": "./dist/index.d.ts",
+       "default": "./dist/index.js"
++    },
++    "./constants": {
++      "types": "./dist/constants.d.ts",
++      "default": "./dist/constants.js"
+     }
+   },
+   "main": "./dist/index.js",

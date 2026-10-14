@@ -1,0 +1,15 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index d311f37..6aff3a4 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -32,7 +32,9 @@ It is a rulebook, not a changelog.
+ - Use `pnpx`, never `npx`. Drive the running app with `pnpx @playwright/cli@latest <command>`.
+ - Never add an ADR (`docs/adrs/`) unless asked for one.
+ - **Every PR with a user-visible change carries screenshots**, uploaded into its
+-  "Screenshots / video" section — plus a video only when an interaction needs showing.
++  "Screenshots / video" section with `node scripts/pr-media/upload.mjs <files…>`
++  ([docs/pr-media.md](docs/pr-media.md)) — plus a video only when an interaction needs
++  showing. That bucket is world-readable — never upload anything private to it.
+ 
+ ## Architecture boundaries
+ 

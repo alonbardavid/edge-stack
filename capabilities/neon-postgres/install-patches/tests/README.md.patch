@@ -1,0 +1,17 @@
+diff --git a/tests/README.md b/tests/README.md
+index f612fd0..d8d081a 100644
+--- a/tests/README.md
++++ b/tests/README.md
+@@ -3,8 +3,10 @@
+ Playwright e2e, run with `pnpm test` (which builds first). Install browsers once with
+ `pnpm --filter tests exec playwright install`.
+ 
+-- e2e isolates its D1: `playwright.config.ts` starts `vite dev` with
+-  `WORKER_PERSIST_TO=.wrangler-test`, the directory `global-setup.ts` migrates and seeds.
++- e2e uses its own database, `project_name_test`: `playwright.config.ts` starts `vite dev`
++  with `WORKER_DATABASE_URL` pointing at it, the database `global-setup.ts` migrates,
++  truncates and seeds. Playwright starts web servers before `globalSetup`, so that command
++  starts the local Postgres first when nothing serves port 5433.
+ - **A backend dev server already running is reused** — and writes no log file, so
+   `e2e/logging/request-log.spec.ts` fails. Stop it before `pnpm test`. The config tees the
+   worker's output into `tests/.logs/worker.log`.

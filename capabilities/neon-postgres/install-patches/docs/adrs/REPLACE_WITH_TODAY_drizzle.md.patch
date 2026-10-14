@@ -1,0 +1,31 @@
+diff --git a/docs/adrs/REPLACE_WITH_TODAY_drizzle.md b/docs/adrs/REPLACE_WITH_TODAY_drizzle.md
+index 64e19b4..3b0ed18 100644
+--- a/docs/adrs/REPLACE_WITH_TODAY_drizzle.md
++++ b/docs/adrs/REPLACE_WITH_TODAY_drizzle.md
+@@ -5,8 +5,7 @@ Date: REPLACE_WITH_TODAY
+ ## Decision
+ 
+ The database is accessed through Drizzle ORM. Migrations are hand-written SQL files in
+-`migrations/`, applied with wrangler (`wrangler d1 migrations apply`). drizzle-kit is not
+-used.
++`migrations/`, applied with umzug (`pnpm db:migrate`). drizzle-kit is not used.
+ 
+ ## Why
+ 
+@@ -27,8 +26,8 @@ The alternatives:
+   limits their flexibility. The company is very geared towards its cloud products, so a
+   bait-and-switch is likely in the future.
+ 
+-Migrations use wrangler because Cloudflare's CLI supports them conveniently and we need few
+-migration features. Plain SQL is easy for agents to write.
++Migrations use umzug: it runs JavaScript, which gives greater flexibility, and its limited
++scope makes it easy to support. Plain SQL is easy for agents to write.
+ 
+ drizzle-kit is not used because it generates migrations from the code schema. That is
+ complicated, especially when the schema is split across several places, and generators
+@@ -44,5 +43,3 @@ have to live in the code schema somehow.
+ - Kysely is already used by better-auth.
+ - Prisma's ability to generate many kinds of code from the schema is very valuable, and it
+   has good better-auth support.
+-- wrangler migrations are plain SQL with little flexibility. If more is needed, move to
+-  something like umzug.

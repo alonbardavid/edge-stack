@@ -1,0 +1,12 @@
+diff --git a/apps/frontend/package.json b/apps/frontend/package.json
+index a9ac814..1a3e565 100644
+--- a/apps/frontend/package.json
++++ b/apps/frontend/package.json
+@@ -22,6 +22,7 @@
+     "@orpc/tanstack-query": "1.15.4",
+     "@tanstack/react-query": "^5.96.2",
+     "better-auth": "^1.2.0",
++    "posthog-js": "^1.434.0",
+     "react": "^18.2.0",
+     "react-dom": "^18.2.0",
+     "react-router-dom": "^7.13.1",

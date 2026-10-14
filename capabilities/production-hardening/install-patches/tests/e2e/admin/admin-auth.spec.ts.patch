@@ -1,0 +1,84 @@
+diff --git a/tests/e2e/admin/admin-auth.spec.ts b/tests/e2e/admin/admin-auth.spec.ts
+index 0f8685b..4951372 100644
+--- a/tests/e2e/admin/admin-auth.spec.ts
++++ b/tests/e2e/admin/admin-auth.spec.ts
+@@ -1,24 +1,24 @@
+ import { test, expect } from "@playwright/test";
+ import { TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD } from "./test-admin";
+-import { API, loginAsAdmin } from "./helpers";
++import { ADMIN_API, ADMIN_ORIGIN, loginAsAdmin } from "./helpers";
+ 
+ test.describe("Admin auth (API)", () => {
+   test("rejects unauthenticated access to protected routes", async ({
+     request,
+   }) => {
+-    const res = await request.get(`${API}/api/admin/auth/me`);
++    const res = await request.get(`${ADMIN_API}/api/admin/auth/me`);
+     expect(res.status()).toBe(401);
+   });
+ 
+   test("rejects missing credentials with 400", async ({ request }) => {
+-    const res = await request.post(`${API}/api/admin/auth/login`, {
++    const res = await request.post(`${ADMIN_API}/api/admin/auth/login`, {
+       data: { username: "" },
+     });
+     expect(res.status()).toBe(400);
+   });
+ 
+   test("rejects invalid credentials with 401", async ({ request }) => {
+-    const res = await request.post(`${API}/api/admin/auth/login`, {
++    const res = await request.post(`${ADMIN_API}/api/admin/auth/login`, {
+       data: { username: TEST_ADMIN_USERNAME, password: "wrong-password" },
+     });
+     expect(res.status()).toBe(401);
+@@ -29,19 +29,19 @@ test.describe("Admin auth (API)", () => {
+   }) => {
+     await loginAsAdmin(request);
+ 
+-    const me = await request.get(`${API}/api/admin/auth/me`);
++    const me = await request.get(`${ADMIN_API}/api/admin/auth/me`);
+     expect(me.status()).toBe(200);
+     expect(await me.json()).toMatchObject({ username: TEST_ADMIN_USERNAME });
+ 
+-    const logout = await request.post(`${API}/api/admin/auth/logout`);
++    const logout = await request.post(`${ADMIN_API}/api/admin/auth/logout`);
+     expect(logout.status()).toBe(200);
+ 
+-    const after = await request.get(`${API}/api/admin/auth/me`);
++    const after = await request.get(`${ADMIN_API}/api/admin/auth/me`);
+     expect(after.status()).toBe(401);
+   });
+ 
+   test("logout itself requires authentication", async ({ request }) => {
+-    const res = await request.post(`${API}/api/admin/auth/logout`);
++    const res = await request.post(`${ADMIN_API}/api/admin/auth/logout`);
+     expect(res.status()).toBe(401);
+   });
+ 
+@@ -49,7 +49,7 @@ test.describe("Admin auth (API)", () => {
+     request,
+   }) => {
+     await loginAsAdmin(request);
+-    const res = await request.get(`${API}/api/admin/does-not-exist`);
++    const res = await request.get(`${ADMIN_API}/api/admin/does-not-exist`);
+     expect(res.status()).toBe(404);
+   });
+ });
+@@ -58,7 +58,7 @@ test.describe("Admin auth (UI)", () => {
+   test("opens /admin without a trailing slash and shows the login screen", async ({
+     page,
+   }) => {
+-    await page.goto("/admin");
++    await page.goto(`${ADMIN_ORIGIN}/admin`);
+     await expect(
+       page.getByRole("heading", { name: "Admin sign in" }),
+     ).toBeVisible();
+@@ -67,7 +67,7 @@ test.describe("Admin auth (UI)", () => {
+   test("logs in and reaches user management without a self-password screen", async ({
+     page,
+   }) => {
+-    await page.goto("/admin/");
++    await page.goto(`${ADMIN_ORIGIN}/admin/`);
+     await page.getByLabel("Username").fill(TEST_ADMIN_USERNAME);
+     await page.getByLabel("Password").fill(TEST_ADMIN_PASSWORD);
+     await page.getByRole("button", { name: "Sign in" }).click();

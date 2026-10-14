@@ -1,0 +1,50 @@
+diff --git a/scripts/gen-wrangler-config.mjs b/scripts/gen-wrangler-config.mjs
+index 8fadf76..19e7011 100644
+--- a/scripts/gen-wrangler-config.mjs
++++ b/scripts/gen-wrangler-config.mjs
+@@ -20,6 +20,7 @@ const OVERRIDES = {
+   frontendCanonicalBaseUrl:
+     environment.canonicalBaseUrl ?? requireEnv("DEPLOY_ORIGIN"),
+   authAllowedHosts: environment.allowedHosts.join(","),
++  emailFrom: taggedSender(requireEnv("EMAIL_FROM"), process.env.EMAIL_TAG),
+   outFile: environment.outFile,
+ };
+ 
+@@ -47,16 +48,36 @@ function main() {
+     // Every remote target (preview/staging/prod) runs in production mode. Local
+     // dev and e2e run from wrangler.jsonc and deliberately leave this unset.
+     NODE_ENV: "production",
++    EMAIL_FROM: OVERRIDES.emailFrom,
+   };
+   // Remote targets read BETTER_AUTH_SECRET from a worker secret (wrangler secret put).
+   delete config.vars.BETTER_AUTH_SECRET;
+ 
+   writeFileSync(out, JSON.stringify(config, null, 2) + "\n");
+   console.log(
+-    `Wrote ${out} (target=${target}, name=${config.name}, db=${OVERRIDES.databaseName}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts})`,
++    `Wrote ${out} (target=${target}, name=${config.name}, db=${OVERRIDES.databaseName}, canonical=${OVERRIDES.frontendCanonicalBaseUrl}, allowed_hosts=${OVERRIDES.authAllowedHosts}, EMAIL_FROM=${OVERRIDES.emailFrom})`,
+   );
+ }
+ 
++// Every non-production target tags the sender's local part with the environment
++// it belongs to (EMAIL_TAG), so mail that escaped a test environment is obvious
++// in the inbox (and filterable) instead of being indistinguishable from the real
++// product's mail. The tag rides along in replies and bounces because it is part
++// of the address, not a header. Production passes no EMAIL_TAG and sends as the
++// bare address. Applied here, at config-generation time, so EMAIL_FROM in the
++// generated config is already final and @lib/email-service stays untouched.
++function taggedSender(address, tag) {
++  if (!tag) {
++    return address;
++  }
++  const [local, domain] = address.split("@");
++  if (!local || !domain) {
++    console.error(`Cannot tag "${address}": expected a local@domain address`);
++    process.exit(1);
++  }
++  return `${local}+${tag}@${domain}`;
++}
++
+ // `vite build` leaves this redirect to the emitted config (wrangler follows it too).
+ function emittedConfigPath() {
+   const redirectFile = resolve(backendDir, ".wrangler/deploy/config.json");

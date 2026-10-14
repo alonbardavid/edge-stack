@@ -1,0 +1,79 @@
+diff --git a/docs/deployment.md b/docs/deployment.md
+index d87aa19..9eb5db6 100644
+--- a/docs/deployment.md
++++ b/docs/deployment.md
+@@ -1,23 +1,29 @@
+ # Deployment
+ 
+-Two long-lived Workers, plus one preview per branch:
++Two long-lived environments, each an end-user Worker plus an admin Worker on one database,
++plus one preview per branch. Production lives in its own Cloudflare account; staging and
++previews share another ([production.md](production.md)).
+ 
+-| Target         | Worker                                   | D1                                     | Deploys                                         |
+-| -------------- | ---------------------------------------- | -------------------------------------- | ----------------------------------------------- |
+-| **production** | `project-name`                           | `project-name-prod`                    | push to `main` (`prod-deploy.yml`)              |
+-| **staging**    | `project-name-staging`                   | `project-name-staging`                 | push to `main` (`staging-deploy.yml`)           |
+-| **preview**    | `project-name-staging`, per-branch alias | `project-name-preview-<branch>-<hash>` | push to any other branch (`preview-deploy.yml`) |
++| Target         | Workers                                              | D1                                     | Deploys                                         |
++| -------------- | ---------------------------------------------------- | -------------------------------------- | ----------------------------------------------- |
++| **production** | `project-name`, `project-name-admin`                 | `project-name-prod`                    | push to `main` (`prod-deploy.yml`)              |
++| **staging**    | `project-name-staging`, `project-name-admin-staging` | `project-name-staging`                 | push to `main` (`staging-deploy.yml`)           |
++| **preview**    | both staging Workers, per-branch alias               | `project-name-preview-<branch>-<hash>` | push to any other branch (`preview-deploy.yml`) |
+ 
+ `e2e.yml` runs Playwright on every PR and on `main`.
+ 
+ ## Generated deploy configs
+ 
+ No deploy uses `wrangler.jsonc` directly. After `pnpm build`, `scripts/gen-wrangler-config.mjs`
+-stamps a target onto the build-emitted `apps/backend/dist/worker/wrangler.json` and writes it
+-beside it; every deploy and migrate command passes `--config dist/worker/<outFile>`.
++stamps a target onto each worker's build-emitted `dist/worker/wrangler.json` (backend and
++admin-backend) and writes it beside it; every deploy and migrate command passes
++`--config dist/worker/<outFile>`. The admin config copies the backend's database binding and
++nothing else.
+ 
+-- Static per-target settings (worker name, canonical frontend URL, allowed auth hosts, output
+-  file) live in `scripts/lib/environments.mjs`, the single domain registry.
++- Static per-target settings (worker names, canonical frontend URL, allowed auth hosts,
++  whether `workers.dev` and preview URLs are on, output file) live in
++  `scripts/lib/environments.mjs`, the single domain registry. Production turns both URL
++  kinds off: it answers only on its custom domains.
+ - Per-deploy values come from env: `TARGET`, `DB_NAME`, `DB_ID`, and `DEPLOY_ORIGIN` for
+   staging and preview, whose workers.dev origins are only known at deploy time.
+ - The committed config has no `database_id`, but the generated one must:
+@@ -31,8 +37,9 @@ Every push to a non-`main` branch gets its own environment:
+ 2. If that D1 does not exist, it is created and the `project-name-staging` D1 is cloned
+    into it. An existing preview D1 is reused, so a re-push keeps its data.
+ 3. Migrations are applied, and `wrangler versions upload --preview-alias` uploads a version
+-   of the staging Worker that serves only at the alias.
+-4. The stable preview URL is commented on the PR, with the Worker's size.
++   of each staging Worker that serves only at the alias (the admin alias is trimmed to fit
++   its longer Worker name).
++4. The stable preview URLs are commented on the PR, with the Worker's size.
+ 
+ `preview-teardown.yml` deletes a branch's D1 when the branch is deleted, and weekly prunes
+ orphans.
+@@ -45,11 +52,17 @@ wrangler's own `Total Upload` line. The limit and growth warning live as env in
+ ## Staging
+ 
+ `staging-deploy.yml` finds-or-creates the `project-name-staging` D1, migrates it, and
+-`wrangler deploy`s. Because previews clone this D1, staging keeps preview data and schema
+-current; preview versions on the same Worker are pinned to their aliases and unaffected.
++`wrangler deploy`s both Workers. Because previews clone this D1, staging keeps preview data and schema
++current; preview versions on the same Workers are pinned to their aliases and unaffected.
+ 
+ ## Production
+ 
+-`prod-deploy.yml` resolves `project-name-prod` by name and **fails if it is missing** — it
+-never creates it, so a misconfigured deploy cannot come up against an empty database. Locally,
+-`pnpm deploy` and `pnpm db:migrate:remote` build, then use `pnpm gen:prod-config`.
++`prod-deploy.yml` runs in the `production` GitHub environment, resolves `project-name-prod`
++by name and **fails if it is missing** — it never creates it, so a misconfigured deploy cannot
++come up against an empty database. It migrates, then deploys both Workers. There is no local
++production deploy: production credentials live only in that environment.
++
++Every Cloudflare workflow passes `refuse-worker` to `.github/actions/cloudflare-env`:
++production refuses an account that hosts `project-name-staging`, staging and previews one
++that hosts `project-name`. A token pointed at the wrong account fails the job before anything
++is deployed.

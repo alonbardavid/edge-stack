@@ -1,0 +1,14 @@
+diff --git a/tests/package.json b/tests/package.json
+index d1341ca..ee00286 100644
+--- a/tests/package.json
++++ b/tests/package.json
+@@ -12,7 +12,9 @@
+     "@lib/db-models": "workspace:*",
+     "@playwright/test": "^1.41.0",
+     "@types/node": "^20.11.0",
++    "@types/pg": "^8.21.0",
+     "better-auth": "^1.2.0",
++    "pg": "^8.23.0",
+     "typescript": "^5.3.3"
+   }
+ }

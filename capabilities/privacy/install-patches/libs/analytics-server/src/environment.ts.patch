@@ -1,0 +1,17 @@
+diff --git a/libs/analytics-server/src/environment.ts b/libs/analytics-server/src/environment.ts
+index e4e818e..3061948 100644
+--- a/libs/analytics-server/src/environment.ts
++++ b/libs/analytics-server/src/environment.ts
+@@ -8,6 +8,10 @@ type EnvironmentVars = { ENVIRONMENT?: string; ANALYTICS_ENABLED?: string };
+  * a var, never the Host header, which the caller controls.
+  */
+ export function analyticsDeliveryEnabled(): boolean {
+-  const { ENVIRONMENT, ANALYTICS_ENABLED } = env as unknown as EnvironmentVars;
+-  return ENVIRONMENT === "production" || ANALYTICS_ENABLED === "true";
++  const { ANALYTICS_ENABLED } = env as unknown as EnvironmentVars;
++  return isProductionEnvironment() || ANALYTICS_ENABLED === "true";
++}
++
++export function isProductionEnvironment(): boolean {
++  return (env as unknown as EnvironmentVars).ENVIRONMENT === "production";
+ }

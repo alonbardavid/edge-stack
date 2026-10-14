@@ -1,0 +1,35 @@
+diff --git a/docs/production.md b/docs/production.md
+index d959113..5d788eb 100644
+--- a/docs/production.md
++++ b/docs/production.md
+@@ -19,11 +19,28 @@ Production Workers have `workers_dev` and `preview_urls` off (`scripts/lib/envir
+ they answer only on their custom domains — the app's on `project-name`, a separate hostname on
+ `project-name-admin` — so nothing reaches them around Cloudflare Access or a WAF rule.
+ 
++## Two Neon projects
++
++| Project                | Holds                                  |
++| ---------------------- | -------------------------------------- |
++| `project-name`         | production, on its default branch      |
++| `project-name-staging` | `staging` and every `preview/*` branch |
++
++Each has its own project-scoped API key, pinned to its project (`NEON_API_KEY` /
++`NEON_PROJECT_ID`). `.github/actions/neon-env` refuses the other target's project
++(`refuse-project`) before it touches a branch. The Workers connect as `project_name_app`, never
++as the owner ([database.md](database.md#neon)); its password is the `DB_APP_PASSWORD` secret, a
++different one on each side.
++
++When the production account has a Hyperdrive config named `project-name-prod`,
++`prod-deploy.yml` binds it and the Workers connect through it with node-postgres; its caching
++is off, since the app reads its own writes. Without one they connect to Neon directly.
++
+ ## GitHub
+ 
+ - **`production` environment** — only `main` may deploy to it, and only `prod-deploy.yml`
+-  names it. Its secrets (`CLOUDFLARE_API_TOKEN`, plus `CLOUDFLARE_ACCOUNT_ID` when the token
+-  sees several accounts) override the repo secrets of the same name, which hold the
++  names it. Its secrets (`CLOUDFLARE_API_TOKEN`, `NEON_API_KEY`, `NEON_PROJECT_ID`,
++  `DB_APP_PASSWORD`, plus `CLOUDFLARE_ACCOUNT_ID` when the token sees several accounts) override the repo secrets of the same name, which hold the
+   non-production values. No other workflow, and no workflow edited on a branch, can read
+   production's secrets.
+ - **Ruleset on the default branch** — changes land only through a pull request, merged by

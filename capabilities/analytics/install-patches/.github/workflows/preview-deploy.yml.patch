@@ -1,0 +1,36 @@
+diff --git a/.github/workflows/preview-deploy.yml b/.github/workflows/preview-deploy.yml
+index 7613357..4a04ab6 100644
+--- a/.github/workflows/preview-deploy.yml
++++ b/.github/workflows/preview-deploy.yml
+@@ -4,6 +4,13 @@ on:
+   push:
+     branches-ignore:
+       - main
++  # Run by hand to point a branch preview at the real PostHog project.
++  workflow_dispatch:
++    inputs:
++      analytics:
++        description: "Deliver analytics to PostHog from this preview"
++        type: boolean
++        default: false
+ 
+ concurrency:
+   group: preview-${{ github.ref }}
+@@ -22,6 +29,8 @@ jobs:
+     env:
+       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++      # Read by both the build and the config generator.
++      ANALYTICS_ENABLED: ${{ inputs.analytics && 'true' || 'false' }}
+       # Cloudflare's limit on the gzipped worker script: 3 MiB on the Free plan,
+       # 10 MiB on Workers Paid. Change this if the plan changes.
+       WORKER_SIZE_LIMIT_MIB: "10"
+@@ -69,6 +78,8 @@ jobs:
+         run: pnpm install --frozen-lockfile
+ 
+       - name: Build
++        env:
++          ENVIRONMENT: staging
+         run: pnpm build
+ 
+       - name: Find or create preview D1

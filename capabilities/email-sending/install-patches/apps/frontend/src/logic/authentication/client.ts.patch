@@ -1,0 +1,17 @@
+diff --git a/apps/frontend/src/logic/authentication/client.ts b/apps/frontend/src/logic/authentication/client.ts
+index 384588e..0431432 100644
+--- a/apps/frontend/src/logic/authentication/client.ts
++++ b/apps/frontend/src/logic/authentication/client.ts
+@@ -2,4 +2,11 @@ import { createAuthClient } from "better-auth/react";
+ 
+ export const authClient = createAuthClient();
+ 
+-export const { signIn, signOut, useSession } = authClient;
++export const {
++  signIn,
++  signUp,
++  signOut,
++  useSession,
++  requestPasswordReset,
++  resetPassword,
++} = authClient;

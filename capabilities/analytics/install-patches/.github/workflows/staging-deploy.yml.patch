@@ -1,0 +1,13 @@
+diff --git a/.github/workflows/staging-deploy.yml b/.github/workflows/staging-deploy.yml
+index d30fbc7..373d6f4 100644
+--- a/.github/workflows/staging-deploy.yml
++++ b/.github/workflows/staging-deploy.yml
+@@ -47,6 +47,8 @@ jobs:
+         run: pnpm install --frozen-lockfile
+ 
+       - name: Build
++        env:
++          ENVIRONMENT: staging
+         run: pnpm build
+ 
+       # The staging D1 is normally created during setup (previews clone from

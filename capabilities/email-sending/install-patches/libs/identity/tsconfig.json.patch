@@ -1,0 +1,14 @@
+diff --git a/libs/identity/tsconfig.json b/libs/identity/tsconfig.json
+index 492da0c..6ea3b79 100644
+--- a/libs/identity/tsconfig.json
++++ b/libs/identity/tsconfig.json
+@@ -7,7 +7,8 @@
+     "declaration": true,
+     "declarationMap": true,
+     "types": ["@cloudflare/workers-types"],
+-    "lib": ["ES2022"]
++    "jsx": "react-jsx",
++    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+   },
+   "references": [{ "path": "../db-models" }, { "path": "../logging" }],
+   "include": ["src/**/*"],

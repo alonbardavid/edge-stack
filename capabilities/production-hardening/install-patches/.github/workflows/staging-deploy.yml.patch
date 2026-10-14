@@ -1,0 +1,22 @@
+diff --git a/.github/workflows/staging-deploy.yml b/.github/workflows/staging-deploy.yml
+index d30fbc7..485c488 100644
+--- a/.github/workflows/staging-deploy.yml
++++ b/.github/workflows/staging-deploy.yml
+@@ -35,6 +35,7 @@ jobs:
+           api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+           account-id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+           resolve-subdomain: "true"
++          refuse-worker: project-name
+ 
+       - uses: pnpm/action-setup@v5
+ 
+@@ -97,6 +98,9 @@ jobs:
+           pnpm --filter @app/backend exec wrangler deploy --config dist/worker/wrangler.generated.staging.json \
+             2>&1 | tee /tmp/deploy.log
+ 
++      - name: Deploy admin
++        run: pnpm --filter @app/admin-backend exec wrangler deploy --config dist/worker/wrangler.generated.staging.json
++
+       # main's bundle size, recorded so preview-deploy.yml can tell a PR how much
+       # its branch grows the worker. Cheap: the size comes from the deploy log
+       # that was printed anyway, so nothing is built twice.
