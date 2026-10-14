@@ -99,7 +99,7 @@ runs:
           PROJECT_ID="$PROJECT_ID_OVERRIDE"
           echo "Using the NEON_PROJECT_ID override: $PROJECT_ID"
         else
-          PROJECTS=$(neon "$API/projects?limit=400")
+          PROJECTS=$(bash "$GITHUB_ACTION_PATH/list.sh" "$API/projects" projects)
           COUNT=$(printf '%s' "$PROJECTS" | jq '.projects | length')
           PROJECT_ID=$(printf '%s' "$PROJECTS" \
             | jq -r --arg name "$PROJECT_NAME" '[.projects[] | select(.name == $name)][0].id // empty')
@@ -121,7 +121,7 @@ runs:
           exit 0
         fi
 
-        BRANCHES=$(neon "$API/projects/$PROJECT_ID/branches")
+        BRANCHES=$(bash "$GITHUB_ACTION_PATH/list.sh" "$API/projects/$PROJECT_ID/branches" branches)
         # $1 = jq filter selecting the branch, $2 = field, $3 = value for $name
         branch_field() {
           printf '%s' "$BRANCHES" \

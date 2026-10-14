@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@mantine/hooks";
+import { LIST_DEFAULT_LIMIT } from "@lib/contract";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -24,7 +25,9 @@ export interface ListPageState {
 
 // Page, page size and a debounced search box for a paged list. Changing the
 // search or the page size goes back to the first page.
-export function useListPage(initialPageSize = 25): ListPageState {
+export function useListPage(
+  initialPageSize = LIST_DEFAULT_LIMIT,
+): ListPageState {
   const [search, setSearchState] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSizeState] = useState(initialPageSize);

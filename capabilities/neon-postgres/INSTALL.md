@@ -40,6 +40,7 @@ file, and the script reports each file as applied, 3-way merged, conflicted, or 
 
 ```
 .github/actions/neon-env/action.yml               # project / branch / connection-string resolver
+.github/actions/neon-env/list.sh                  # pages through a Neon API list
 docs/adrs/REPLACE_WITH_TODAY_{postgres,neon}.md   # the decision records
 docs/database.md                                  # the project's database reference
 libs/db-models/src/client.ts                      # driver selection by host

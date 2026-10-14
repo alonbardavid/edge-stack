@@ -48,6 +48,10 @@ It is a rulebook, not a changelog.
 - Server code logs a **constant message** with everything variable as a property
   (`log.info("user created", { userId })`); never put emails, passwords or tokens in a
   property.
+- **Every list is paged**: a list endpoint takes `listQuerySchema` and answers
+  `listPageSchema` through `paginate`, 20 rows a page unless there is a reason for another
+  size. A server autocomplete takes `autocompleteQuerySchema` and answers
+  `autocompleteResultSchema`: at most 5 items.
 
 ## Traps
 
@@ -57,3 +61,5 @@ It is a rulebook, not a changelog.
   restores `dist/` without the redirect and deploy-config generation fails.
 - `kysely` is pinned in `pnpm.overrides` because better-auth statically imports its kysely
   adapter even on the Drizzle path, and 0.29 dropped the root export it needs.
+- A workflow step that reads a list API (Cloudflare, Neon, GitHub) **pages through all of
+  it** (`gh api --paginate`, a cursor loop) — a first page alone silently misses the rest.

@@ -4,6 +4,8 @@ export const LIST_SORT_DIRECTIONS = ["asc", "desc"] as const;
 export const LIST_MAX_OFFSET = 10_000;
 export const LIST_TOTAL_CAP = 10_000;
 export const LIST_MAX_SEARCH_LENGTH = 100;
+export const LIST_DEFAULT_LIMIT = 20;
+export const AUTOCOMPLETE_LIMIT = 5;
 
 const OFFSET_CURSOR = /^\d+$/;
 
@@ -54,7 +56,7 @@ export function listQuerySchema<
         .int()
         .min(1)
         .max(options.maxLimit ?? 200)
-        .default(options.defaultLimit ?? 50),
+        .default(options.defaultLimit ?? LIST_DEFAULT_LIMIT),
       cursor: listCursorSchema.optional(),
       withTotal: queryFlagSchema.default(false),
     })
@@ -66,6 +68,18 @@ export function listPageSchema<Item extends z.ZodType>(item: Item) {
     items: z.array(item),
     nextCursor: z.string().nullable(),
     total: listTotalSchema.nullable(),
+  });
+}
+
+// The query of a server autocomplete: what was typed so far. It is answered
+// with at most AUTOCOMPLETE_LIMIT items; extend it for the endpoint's filters.
+export const autocompleteQuerySchema = z.object({
+  q: z.string().trim().min(1).max(LIST_MAX_SEARCH_LENGTH),
+});
+
+export function autocompleteResultSchema<Item extends z.ZodType>(item: Item) {
+  return z.object({
+    items: z.array(item).max(AUTOCOMPLETE_LIMIT),
   });
 }
 

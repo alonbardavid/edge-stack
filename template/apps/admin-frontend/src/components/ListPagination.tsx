@@ -1,7 +1,7 @@
 import { Group, Pagination, Select, Text } from "@mantine/core";
 import { LIST_MAX_OFFSET, type ListTotal } from "@lib/contract";
 
-const PAGE_SIZES = ["10", "25", "50", "100"];
+const PAGE_SIZES = ["10", "20", "50", "100"];
 
 export const ListPagination = ({
   total,

@@ -1,8 +1,8 @@
 diff --git a/docs/architecture.md b/docs/architecture.md
-index a5d9862..22f8802 100644
+index 3753ea9..52bae5b 100644
 --- a/docs/architecture.md
 +++ b/docs/architecture.md
-@@ -29,10 +29,11 @@ better-auth (email + password) in `@lib/identity` (`getAuth()`), mounted on `/ap
+@@ -49,10 +49,11 @@ better-auth (email + password) in `@lib/identity` (`getAuth()`), mounted on `/ap
  using its Drizzle adapter over D1 with the `user` / `user_sessions` / `user_accounts` /
  `user_verifications` tables. Sessions are httpOnly cookies; there is no client token.
  

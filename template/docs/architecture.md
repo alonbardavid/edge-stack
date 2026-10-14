@@ -37,6 +37,11 @@ the contract names. Frontends call them through `@orpc/tanstack-query`
 - Errors are `ORPCError`s. The ones a handler raises itself are declared with `.errors()`
   and thrown with `errors.X()`; anything else is logged and answered as a bare 500.
 - Inputs and outputs are both validated.
+- Lists are paged: `listQuerySchema` / `listPageSchema` (`@lib/contract`) with `paginate`
+  (`@lib/db-models`) give search, sort, equality filters and a cursor that is either an
+  offset or the row to continue after, 20 rows a page by default. Autocompletes use
+  `autocompleteQuerySchema` / `autocompleteResultSchema`, whose output check rejects more
+  than 5 items.
 
 ## End-user authentication
 

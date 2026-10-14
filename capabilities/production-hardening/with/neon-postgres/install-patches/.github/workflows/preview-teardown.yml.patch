@@ -1,5 +1,5 @@
 diff --git a/.github/workflows/preview-teardown.yml b/.github/workflows/preview-teardown.yml
-index c2e35d1..99e7729 100644
+index b93c34a..0710c83 100644
 --- a/.github/workflows/preview-teardown.yml
 +++ b/.github/workflows/preview-teardown.yml
 @@ -23,6 +23,8 @@ jobs:

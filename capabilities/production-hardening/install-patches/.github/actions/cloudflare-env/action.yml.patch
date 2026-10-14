@@ -1,5 +1,5 @@
 diff --git a/.github/actions/cloudflare-env/action.yml b/.github/actions/cloudflare-env/action.yml
-index c95d0f6..22244f6 100644
+index c95d0f6..587cda9 100644
 --- a/.github/actions/cloudflare-env/action.yml
 +++ b/.github/actions/cloudflare-env/action.yml
 @@ -20,6 +20,13 @@ inputs:
@@ -24,16 +24,19 @@ index c95d0f6..22244f6 100644
        run: |
          set -euo pipefail
  
-@@ -80,6 +88,17 @@ runs:
+@@ -80,6 +88,20 @@ runs:
          echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
          echo "account_id=$ACCOUNT_ID" >> "$GITHUB_OUTPUT"
  
 +        if [ -n "$CF_REFUSE_WORKER" ]; then
-+          FOUND=$(curl -fsS \
++          STATUS=$(curl -sS -o /dev/null -w '%{http_code}' \
 +            -H "Authorization: Bearer $CF_API_TOKEN" \
-+            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts" \
-+            | jq -r --arg name "$CF_REFUSE_WORKER" '.result[] | select(.id == $name) | .id')
-+          if [ -n "$FOUND" ]; then
++            "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/$CF_REFUSE_WORKER/settings")
++          if [ "$STATUS" != "404" ] && [ "$STATUS" != "200" ]; then
++            echo "::error::Could not check account $ACCOUNT_ID for the Worker $CF_REFUSE_WORKER (HTTP $STATUS)."
++            exit 1
++          fi
++          if [ "$STATUS" = "200" ]; then
 +            echo "::error::Account $ACCOUNT_ID hosts the Worker $CF_REFUSE_WORKER, so this is the wrong account for this deploy. Production and non-production deploys use separate accounts: check which CLOUDFLARE_API_TOKEN this job got (repo secret, or the production environment's)."
 +            exit 1
 +          fi

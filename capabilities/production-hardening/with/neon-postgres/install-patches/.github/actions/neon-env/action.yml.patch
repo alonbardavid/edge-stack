@@ -1,5 +1,5 @@
 diff --git a/.github/actions/neon-env/action.yml b/.github/actions/neon-env/action.yml
-index 53484b8..2d81753 100644
+index 83a7776..461223b 100644
 --- a/.github/actions/neon-env/action.yml
 +++ b/.github/actions/neon-env/action.yml
 @@ -19,6 +19,13 @@ inputs:
